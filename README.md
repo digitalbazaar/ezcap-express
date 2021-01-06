@@ -2,8 +2,7 @@
 
 [![Node.js CI](https://github.com/digitalbazaar/ezcap-express/workflows/Node.js%20CI/badge.svg)](https://github.com/digitalbazaar/ezcap-express/actions?query=workflow%3A%22Node.js+CI%22)
 
-> A collection of Authorization Capability middleware for node.js express-based
-> HTTP servers.
+> Authorization Capability (ZCAP) middleware for express.js HTTP servers
 
 ## Table of Contents
 
