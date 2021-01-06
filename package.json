@@ -1,0 +1,39 @@
+{
+  "name": "@digitalbazaar/ezcap-middleware",
+  "version": "0.0.1",
+  "main": "lib",
+  "module": "main.js",
+  "repository": {
+    "type": "git",
+    "url": "git@github.com:digitalbazaar/ezcap-middleware.git"
+  },
+  "author": {
+    "name": "Digital Bazaar, Inc.",
+    "email": "support@digitalbazaar.com",
+    "url": "https://digitalbazaar.com/"
+  },
+  "scripts": {
+    "lint": "eslint .",
+    "test": "npm run test-node",
+    "test-node": "cross-env NODE_ENV=test mocha -r esm --preserve-symlinks -t 30000 -A -R ${REPORTER:-spec} --require tests/test-mocha.js tests/*.spec.js"
+  },
+  "dependencies": {
+    "@digitalbazaar/http-client": "^1.0.0",
+    "auth-header": "^1.0.0",
+    "uuid-random": "^1.3.2"
+  },
+  "devDependencies": {
+    "chai": "^4.2.0",
+    "cross-env": "^7.0.2",
+    "eslint": "^7.10.0",
+    "eslint-config-digitalbazaar": "^2.6.1",
+    "esm": "^3.2.25",
+    "mocha": "^8.1.3"
+  },
+  "engines": {
+    "node": ">=14.0.0"
+  },
+  "publishConfig": {
+    "registry": "https://npm.pkg.github.com/"
+  }
+}
