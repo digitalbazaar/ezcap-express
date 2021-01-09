@@ -1,8 +1,11 @@
-# ezcap express library (@digitalbazaar/ezcap-express)
+# ezcap express library (ezcap-express)
 
 [![Node.js CI](https://github.com/digitalbazaar/ezcap-express/workflows/Node.js%20CI/badge.svg)](https://github.com/digitalbazaar/ezcap-express/actions?query=workflow%3A%22Node.js+CI%22)
 
-> Authorization Capability (ZCAP) middleware for express.js HTTP servers
+> ZCAP's gettin' you down? Get on the EZCAP Express! Woot WOoot! 🚇🎉
+
+Connect middleware that provides easy Authorization Capability (ZCAP) Support
+for express.js HTTP servers and more.
 
 ## Table of Contents
 
