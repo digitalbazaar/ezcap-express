@@ -47,11 +47,11 @@ npm install
 
 ## Usage
 
-* [Define getCapabilityController](define-getcapabilitycontroller)
-* [Define documentLoader](define-documentloader)
-* [Define authorizeMyZcapInvocation](define-authorizemyzcapinvocation)
-* [Use authorizeMyZcapInvocation](use-authorizemyzcapinvocation)
-* [Define getCapabilityController](define-getcapabilitycontroller)
+* [Define getCapabilityController](#define-getcapabilitycontroller)
+* [Define documentLoader](#define-documentloader)
+* [Define authorizeMyZcapInvocation](#define-authorizemyzcapinvocation)
+* [Use authorizeMyZcapInvocation](#use-authorizemyzcapinvocation)
+* [Define getCapabilityController](#define-getcapabilitycontroller)
 
 ### Define getCapabilityController
 
