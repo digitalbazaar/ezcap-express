@@ -218,25 +218,7 @@ very simple code.
 These are the two assumptions that ezcap makes and with those two assumptions,
 80% of all use cases we've encountered are covered.
 
-<a name="authorizeZcapInvocation"></a>
-
-## authorizeZcapInvocation(options) ⇒ <code>function</code>
-Authorizes an incoming request.
-
-**Kind**: global function  
-**Returns**: <code>function</code> - Returns an Express.js middleware route handler.  
-
-| Param | Type | Description |
-| --- | --- | --- |
-| options | <code>object</code> | Options hashmap. |
-| options.documentLoader | <code>object</code> | Document loader used to load   DID Documents, capability documents, and JSON-LD Contexts. |
-| [options.expectedAction] | <code>string</code> | The expected action for the   invoked capability. |
-| options.expectedHost | <code>string</code> | The expected host for the invoked   capability. |
-| [options.expectedAction] | <code>string</code> | The expected target for the   invoked capability. |
-| [options.getController] | <code>Promise.&lt;string&gt;</code> | Gets the controller URL   for the invoked target. If this value isn't specified, getRootCapability   must be specified. |
-| [options.getRootCapability] | <code>Promise</code> | The expected target for the   invoked capability. If this value isn't specified, getController must be   specified. |
-| [options.suite] | <code>class</code> | The expected cryptography suite to use when   verifying digital signatures. |
-
+{{>main}}
 
 ## Contribute
 
