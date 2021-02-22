@@ -1,4 +1,4 @@
-# @digitalbazaar/ezcap-middleware Changelog
+# @digitalbazaar/ezcap-express Changelog
 
 ## 1.0.0 - 2021-01-??
 

@@ -1,4 +1,4 @@
-# ezcap express library (ezcap-express)
+# ezcap express library (@digitalbazaar/ezcap-express)
 
 [![Node.js CI](https://github.com/digitalbazaar/ezcap-express/workflows/Node.js%20CI/badge.svg)](https://github.com/digitalbazaar/ezcap-express/actions?query=workflow%3A%22Node.js+CI%22)
 
@@ -223,8 +223,8 @@ These are the two assumptions that ezcap makes and with those two assumptions,
 ## authorizeZcapInvocation(options) ⇒ <code>function</code>
 Authorizes an incoming request.
 
-**Kind**: global function  
-**Returns**: <code>function</code> - Returns an Express.js middleware route handler.  
+**Kind**: global function
+**Returns**: <code>function</code> - Returns an Express.js middleware route handler.
 
 | Param | Type | Description |
 | --- | --- | --- |
