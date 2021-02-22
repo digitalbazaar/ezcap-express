@@ -1,5 +1,5 @@
 {
-  "name": "ezcap-express",
+  "name": "@digitalbazaar/ezcap-express",
   "version": "0.0.1",
   "main": "lib",
   "module": "main.js",
