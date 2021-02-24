@@ -76,6 +76,7 @@ async function getCapabilityController({req}) {
       throw new Error(`Invalid capability identifier ` +
         `(${capabilityId}) for URL (${req.url})'.`);
     }
+    throw e;
   }
 
   // return the controller for the request URL
