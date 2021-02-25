@@ -51,34 +51,32 @@ npm install
 * [Define documentLoader](#define-documentloader)
 * [Define authorizeMyZcapInvocation](#define-authorizemyzcapinvocation)
 * [Use authorizeMyZcapInvocation](#use-authorizemyzcapinvocation)
-* [Define getCapabilityController](#define-getcapabilitycontroller)
+* [Define getRootController](#define-getrootcontroller)
 
-### Define getCapabilityController
+### Define getRootController
 
 ```js
-async function getCapabilityController({req}) {
-  const capabilityId = req.params;
-  let controller;
-
-  // Assume something like this URL pattern for
-  // server URLs: /accounts/:capabilityId/things/1
-  if(!capabilityId) {
-    throw new Error(`Root capability identifier could not be determined for URL (${req.url}).`);
-  }
-
+async function getRootController({
+  req, rootCapabilityId, rootInvocationTarget
+}) {
   // get associated capability controller from database
+  let controller;
   try {
     const id = capabilityId;
-    const record = await database.getControllerForId({id});
+    const record = await database.getMyThingById({
+      id: rootInvocationTarget
+    });
     controller = record.controller;
   } catch(e) {
     if(e.type === 'NotFoundError') {
-      throw new Error(`Invalid capability identifier ` +
-        `(${capabilityId}) for URL (${req.url})'.`);
+      const url = req.protocol + '://' + req.get('host') + req.url;
+      throw new Error(
+        `Invalid capability identifier "${rootCapabilityId}" ` +
+        `for URL "${url}".`);
     }
+    throw e;
   }
 
-  // return the controller for the request URL
   return controller;
 }
 ```
@@ -89,7 +87,6 @@ async function getCapabilityController({req}) {
 import didIo from 'did-io';
 import didKeyDriver from 'did-method-key';
 import {documentLoader as _documentLoader} from 'bedrock-jsonld-document-loader';
-const capabilityIdRegex = new RegExp('\/accounts\/([^/]+).*');
 
 // support did:key
 didIo.use('key', didKeyDriver.driver());
@@ -98,9 +95,6 @@ async function documentLoader(url) {
   let document;
   if(url.startsWith('did:')) {
     document = await didIo.get({did: url, forceConstruct: true});
-    if(url.startsWith('did:v1')) {
-      document = document.doc;
-    }
     return {
       contextUrl: null,
       documentUrl: url,
@@ -108,32 +102,7 @@ async function documentLoader(url) {
     };
   }
 
-  if(url.startsWith('urn:zcap:root:')) {
-    // dynamically generate zcap for root capability if applicable
-    const targetUrl = decodeURIComponent(url.slice(14));
-    const parsedUrl = URL.parse(targetUrl);
-    const invocationTarget =
-      'https://zcap.example' + parsedUrl.pathname;
-    const capabilityId = parsedUrl.pathname.match(capabilityIdRegex)[1];
-    const req = {
-      url: parsedUrl.pathname,
-      params: {capabilityId}
-    };
-    const controller = await getCapabilityController({req});
-    const zcap = {
-      '@context': SECURITY_CONTEXT_V2_URL,
-      id: 'urn:zcap:root:' + encodeURIComponent(invocationTarget),
-      invocationTarget,
-      controller
-    };
-    return {
-      contextUrl: null,
-      documentUrl: url,
-      document: zcap
-    };
-  }
-
-  // finally, try the base document loader
+  // finally, try the bedrock document loader
   return _documentLoader(url);
 }
 ```
@@ -141,14 +110,16 @@ async function documentLoader(url) {
 ### Define authorizeMyZcapInvocation
 
 ```js
-const {asyncHandler} = require('bedrock-express');
 const {authorizeZcapInvocation} = require('ezcap-express');
 
 async function authorizeMyZcapInvocation({expectedTarget, expectedAction} = {}) {
-  return asyncHandler(authorizeZcapInvocation({
+  return authorizeZcapInvocation({
     expectedHost: 'ezcap.example',
-    getCapabilityController, documentLoader, expectedTarget, expectedAction
-  }));
+    getRootController,
+    documentLoader,
+    expectedTarget,
+    expectedAction,
+  });
 };
 ```
 
@@ -223,8 +194,8 @@ These are the two assumptions that ezcap makes and with those two assumptions,
 ## authorizeZcapInvocation(options) ⇒ <code>function</code>
 Authorizes an incoming request.
 
-**Kind**: global function
-**Returns**: <code>function</code> - Returns an Express.js middleware route handler.
+**Kind**: global function  
+**Returns**: <code>function</code> - Returns an Express.js middleware route handler.  
 
 | Param | Type | Description |
 | --- | --- | --- |
@@ -232,10 +203,11 @@ Authorizes an incoming request.
 | options.documentLoader | <code>object</code> | Document loader used to load   DID Documents, capability documents, and JSON-LD Contexts. |
 | [options.expectedAction] | <code>string</code> | The expected action for the   invoked capability. |
 | options.expectedHost | <code>string</code> | The expected host for the invoked   capability. |
-| [options.expectedAction] | <code>string</code> | The expected target for the   invoked capability. |
-| [options.getController] | <code>Promise.&lt;string&gt;</code> | Gets the controller URL   for the invoked target. If this value isn't specified, getRootCapability   must be specified. |
-| [options.getRootCapability] | <code>Promise</code> | The expected target for the   invoked capability. If this value isn't specified, getController must be   specified. |
-| [options.suite] | <code>class</code> | The expected cryptography suite to use when   verifying digital signatures. |
+| [options.expectedTarget] | <code>string</code> \| <code>Array.&lt;string&gt;</code> | The expected   target(s) for the invoked capability. |
+| [options.getExpectedRootCapabilityId] | <code>function</code> | Used to return the   expected root capability identifiers for the expected targets. |
+| options.getRootController | <code>function</code> | Used to get the root capability   controller for the given root capability ID. |
+| [options.logger] | <code>object</code> | The logger instance to use. |
+| [options.suite] | <code>object</code> | The expected cryptography suite to use when   verifying digital signatures. |
 
 
 ## Contribute
