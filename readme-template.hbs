@@ -62,7 +62,6 @@ async function getRootController({
   // get associated capability controller from database
   let controller;
   try {
-    const id = capabilityId;
     const record = await database.getMyThingById({
       id: rootInvocationTarget
     });
@@ -86,7 +85,9 @@ async function getRootController({
 ```js
 import didIo from 'did-io';
 import didKeyDriver from 'did-method-key';
-import {documentLoader as _documentLoader} from 'bedrock-jsonld-document-loader';
+import jldl from 'jsonld-document-loader';
+
+const _documentLoader = new jldl.JsonLdDocumentLoader();
 
 // support did:key
 didIo.use('key', didKeyDriver.driver());
@@ -102,7 +103,7 @@ async function documentLoader(url) {
     };
   }
 
-  // finally, try the bedrock document loader
+  // finally, try the base document loader
   return _documentLoader(url);
 }
 ```
@@ -127,8 +128,7 @@ async function authorizeMyZcapInvocation({expectedTarget, expectedAction} = {}) 
 
 ```js
 import express from 'express';
-const {asyncHandler} = require('bedrock-express');
-import {authorize} from '@digitalbazaar/ezcap-express';
+import asyncHandler from 'express-async-handler';
 
 const app = express();
 
