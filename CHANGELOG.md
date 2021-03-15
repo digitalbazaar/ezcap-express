@@ -3,8 +3,7 @@
 ## 2.0.0 - TBD
 
 ### Added
-- Add optional `onError` handler which allows for errors to be wrappped
-  before being thrown.
+- Add optional `onError` handler for customizable error handling.
 
 ### Changed
 - **BREAKING**: Replace `expectedTarget` parameter with `getExpectedTarget`.
