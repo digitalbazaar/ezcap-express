@@ -9,6 +9,8 @@
 - **BREAKING**: Replace `expectedTarget` parameter with `getExpectedTarget`.
   `getExpectedTarget` is an async function used to return the expected
   target(s) for the invoked capability.
+- **BREAKING**: Remove the `logger` parameter. Errors may now be logged by the
+  `onError` handler.
 
 ## 1.0.1 - 2021-03-02
 
