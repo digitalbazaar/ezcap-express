@@ -2,6 +2,10 @@
 
 ## 2.0.0 - TBD
 
+### Added
+- Add optional `onError` handler which allows for errors to be wrappped
+  before being thrown.
+
 ### Changed
 - **BREAKING**: Replace `expectedTarget` parameter with `getExpectedTarget`.
   `getExpectedTarget` is an async function used to return the expected
