@@ -1,5 +1,12 @@
 # @digitalbazaar/ezcap-express Changelog
 
+## 2.0.0 - TBD
+
+### Changed
+- **BREAKING**: Replace `expectedTarget` parameter with `getExpectedTarget`.
+  `getExpectedTarget` is an async function used to return the expected
+  target(s) for the invoked capability.
+
 ## 1.0.1 - 2021-03-02
 
 ### Fixed
