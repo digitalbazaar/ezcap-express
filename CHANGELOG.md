@@ -1,6 +1,6 @@
 # @digitalbazaar/ezcap-express Changelog
 
-## 2.0.0 - TBD
+## 2.0.0 - 2021-03-29
 
 ### Added
 - Add optional `onError` handler for customizable error handling.
