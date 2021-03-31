@@ -1,5 +1,11 @@
 # @digitalbazaar/ezcap-express Changelog
 
+## 3.0.0 - TBD
+
+### Changed
+- **BREAKING**: Use `http-signature-zcap-verify@5` which only supports
+  `Ed25519Signature2020` proofs.
+
 ## 2.0.0 - 2021-03-29
 
 ### Added
