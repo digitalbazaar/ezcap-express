@@ -1,6 +1,6 @@
 # @digitalbazaar/ezcap-express Changelog
 
-## 3.0.0 - TBD
+## 3.0.0 - 2021-04-01
 
 ### Changed
 - **BREAKING**: Use `http-signature-zcap-verify@5` which only supports
