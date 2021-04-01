@@ -23,7 +23,7 @@
     "esm": "^3.2.25",
     "express-async-handler": "^1.1.4",
     "http-signature-header": "^2.0.1",
-    "http-signature-zcap-verify": "digitalbazaar/http-signature-zcap-verify#crypto-ld",
+    "http-signature-zcap-verify": "^5.0.0",
     "jsonld-signatures": "^7.0.0"
   },
   "devDependencies": {
