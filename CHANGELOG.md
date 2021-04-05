@@ -1,5 +1,12 @@
 # @digitalbazaar/ezcap-express Changelog
 
+## 4.0.0 -
+
+### Changed
+- **BREAKING**: Change the default signature suite in `authorizeZcapInvocation`
+  to `Ed25519Signature2020` (was `Ed25519Signature2018` before).
+- Update to use newest jsigs and suite versions.
+
 ## 3.0.0 - 2021-04-01
 
 ### Changed
