@@ -1,11 +1,14 @@
 # @digitalbazaar/ezcap-express Changelog
 
-## 4.0.0 -
+## 3.0.1 - 2021-04-06
+
+### Fixed
+- **BREAKING**: Change the default signature suite in `authorizeZcapInvocation`
+  to `Ed25519Signature2020` (was `Ed25519Signature2018` before). This change
+  should have been included in the 3.0 release.
 
 ### Changed
-- **BREAKING**: Change the default signature suite in `authorizeZcapInvocation`
-  to `Ed25519Signature2020` (was `Ed25519Signature2018` before).
-- Update to use newest jsigs and suite versions.
+- Remove `jsonld-signatures` dependency.
 
 ## 3.0.0 - 2021-04-01
 
