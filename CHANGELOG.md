@@ -1,5 +1,11 @@
 # @digitalbazaar/ezcap-express Changelog
 
+## 3.1.0 - 2021-05-xx
+
+### Added
+- Add optional `getExpectedAction({req})` hook to provide expected action
+  based on, e.g., request body vs. HTTP method.
+
 ## 3.0.1 - 2021-04-06
 
 ### Fixed
