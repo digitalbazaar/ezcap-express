@@ -1,6 +1,6 @@
 # @digitalbazaar/ezcap-express Changelog
 
-## 3.1.0 - 2021-05-xx
+## 3.1.0 - 2021-05-11
 
 ### Added
 - Add optional `getExpectedAction({req})` hook to provide expected action
