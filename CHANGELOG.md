@@ -1,6 +1,6 @@
 # @digitalbazaar/ezcap-express Changelog
 
-## 3.2.0 - 2021-05-xx
+## 3.2.0 - 2021-05-13
 
 ### Added
 - Add ability to specify an `inspectCapabilityChain` hook.
