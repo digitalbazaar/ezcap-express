@@ -1,5 +1,10 @@
 # @digitalbazaar/ezcap-express Changelog
 
+## 3.3.0 - 2021-05-xx
+
+### Added
+- Verify http digest header when body/content-type is present.
+
 ## 3.2.0 - 2021-05-13
 
 ### Added
