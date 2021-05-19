@@ -1,6 +1,6 @@
 # @digitalbazaar/ezcap-express Changelog
 
-## 3.3.0 - 2021-05-xx
+## 3.3.0 - 2021-05-19
 
 ### Added
 - Verify HTTP "digest" header when a "content-type" header or body is present.
