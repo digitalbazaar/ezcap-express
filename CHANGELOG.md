@@ -3,7 +3,7 @@
 ## 3.3.0 - 2021-05-xx
 
 ### Added
-- Verify http digest header when body/content-type is present.
+- Verify HTTP "digest" header when a "content-type" header or body is present.
 
 ## 3.2.0 - 2021-05-13
 
