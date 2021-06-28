@@ -1,5 +1,12 @@
 # @digitalbazaar/ezcap-express Changelog
 
+## 3.3.1 - 2021-xx-xx
+
+### Added
+- **BREAKING**: Add missing `allowTargetAttenuation` option that defaults
+  to `true` to support RESTful-based attenuated delegation as the documentation
+  describes.
+
 ## 3.3.0 - 2021-05-19
 
 ### Added
