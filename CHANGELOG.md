@@ -1,5 +1,17 @@
 # @digitalbazaar/ezcap-express Changelog
 
+## 3.4.2 - 2021-07-xx
+
+### Fixed
+- Fix bug with erroneously detecting request bodies. Some body
+  parsing middleware for express/connect (e.g., the main body-parser
+  npm package) will set a request body to an empty object even when
+  no body is present. This previously caused an error to be thrown
+  because no body digest header was present. The code has been updated
+  to check for http body headers per the spec now (instead of trusting
+  the `req.body` value) and it will set the `req.body` value to
+  `undefined` if it is not present.
+
 ## 3.4.1 - 2021-07-10
 
 ### Fixed
