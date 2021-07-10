@@ -1,6 +1,6 @@
 # @digitalbazaar/ezcap-express Changelog
 
-## 3.4.2 - 2021-07-xx
+## 3.4.2 - 2021-07-10
 
 ### Fixed
 - Fix bug with erroneously detecting request bodies. Some body
