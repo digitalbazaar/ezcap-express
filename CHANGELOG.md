@@ -1,5 +1,12 @@
 # @digitalbazaar/ezcap-express Changelog
 
+## 3.4.1 - 2021-07-xx
+
+### Fixed
+- Fix error handling bugs. Http signature errors thrown by the
+  middleware created via `authorizeZcapInvocation` will now be
+  properly passed to the `onError` handler.
+
 ## 3.4.0 - 2021-06-28
 
 ### Added
