@@ -1,6 +1,6 @@
 # @digitalbazaar/ezcap-express Changelog
 
-## 3.4.1 - 2021-07-xx
+## 3.4.1 - 2021-07-10
 
 ### Fixed
 - Fix error handling bugs. Http signature errors thrown by the
