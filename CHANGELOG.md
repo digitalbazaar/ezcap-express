@@ -1,5 +1,11 @@
 # @digitalbazaar/ezcap-express Changelog
 
+## 4.0.1 - 2021-07-xx
+
+### Fixed
+- Fix http-signature-zcap-verify dependency to use 8.x to function
+  properly with updated ed25519 libs.
+
 ## 4.0.0 - 2021-07-10
 
 ### Changed
