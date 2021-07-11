@@ -1,6 +1,6 @@
 # @digitalbazaar/ezcap-express Changelog
 
-## 4.0.0 - 2021-07-xx
+## 4.0.0 - 2021-07-10
 
 ### Changed
 - **BREAKING**: Updated to use `@digitalbazaar/ed25519-signature-2020` 3.x
