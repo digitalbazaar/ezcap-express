@@ -1,5 +1,11 @@
 # @digitalbazaar/ezcap-express Changelog
 
+## 4.1.0 - 2021-07-xx
+
+### Changed
+- Updated http-signature-zcap-verify to 8.1.x to bring in optimizations
+  for controllers that use DID Documents.
+
 ## 4.0.1 - 2021-07-10
 
 ### Fixed
