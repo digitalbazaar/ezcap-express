@@ -1,5 +1,12 @@
 # @digitalbazaar/ezcap-express Changelog
 
+## 4.0.0 - 2021-07-xx
+
+### Changed
+- **BREAKING**: Updated to use `@digitalbazaar/ed25519-signature-2020` 3.x
+  and related libraries. These changes include breaking fixes to key
+  formats.
+
 ## 3.4.2 - 2021-07-10
 
 ### Fixed
