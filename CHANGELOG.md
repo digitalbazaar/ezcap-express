@@ -1,6 +1,6 @@
 # @digitalbazaar/ezcap-express Changelog
 
-## 4.1.0 - 2021-07-xx
+## 4.1.0 - 2021-07-11
 
 ### Changed
 - Updated http-signature-zcap-verify to 8.1.x to bring in optimizations
