@@ -1,6 +1,6 @@
 # @digitalbazaar/ezcap-express Changelog
 
-## 4.1.1 - 2021-07-xx
+## 4.1.1 - 2021-07-21
 
 ### Changed
 - Updated dependencies.
