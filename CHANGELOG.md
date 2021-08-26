@@ -7,6 +7,11 @@
   `suiteFactory` function should be passed and return the supported LD proof
   suite (or an array of supported LD proof suites) that is supported for
   authorizing zcap invocations and verifying capability chains.
+- Add `authorizeZcapRevocation` middleware that can be attached to root
+  container/object endpoints to enable revocation of zcaps that have been
+  delegated to use them. This version assumes that the revocations endpoint
+  will follow this RESTful format: `<rootObjectUrl>/revocations/<zcapId>`.
+  Future versions may allow for greater flexibility.
 
 ### Changed
 - Deprecate passing a `suite` to any middleware creation functions. Instead,
