@@ -1,6 +1,6 @@
 # @digitalbazaar/ezcap-express Changelog
 
-## 4.2.0 - 2021-08-xx
+## 4.2.0 - 2021-08-26
 
 ### Added
 - Add `suiteFactory` parameter to middleware creation functions. A
