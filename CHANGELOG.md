@@ -1,5 +1,20 @@
 # @digitalbazaar/ezcap-express Changelog
 
+## 4.2.0 - 2021-08-xx
+
+### Added
+- Add `suiteFactory` parameter to middleware creation functions. A
+  `suiteFactory` function should be passed and return the supported LD proof
+  suite (or an array of supported LD proof suites) that is supported for
+  authorizing zcap invocations and verifying capability chains.
+
+### Changed
+- Deprecate passing a `suite` to any middleware creation functions. Instead,
+  `suiteFactory` should be passed. The next major version will remove `suite`.
+  This approach allows this library to remove npm dependencies that provide
+  cryptographic suites preventing this library from being affected when those
+  dependencies need to change.
+
 ## 4.1.1 - 2021-07-21
 
 ### Changed
