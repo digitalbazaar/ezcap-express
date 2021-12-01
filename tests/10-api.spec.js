@@ -2,15 +2,16 @@
 /*!
  * Copyright (c) 2021 Digital Bazaar, Inc. All rights reserved.
  */
+import {decodeSecretKeySeed} from 'bnid';
 import chai from 'chai';
 import chaiHttp from 'chai-http';
 import express from 'express';
-import {authorizeZcapInvocation} from '..';
+import * as didKey from '@digitalbazaar/did-method-key';
+import {Ed25519Signature2020} from '@digitalbazaar/ed25519-signature-2020';
+import {ZcapClient} from '@digitalbazaar/ezcap';
 import {securityLoader} from '@digitalbazaar/security-document-loader';
 import zcapCtx from 'zcap-context';
-import {ZcapClient, getCapabilitySigners} from '@digitalbazaar/ezcap';
-import {Ed25519Signature2020} from '@digitalbazaar/ed25519-signature-2020';
-import * as didKey from '@digitalbazaar/did-method-key';
+import {authorizeZcapInvocation} from '..';
 
 const didKeyDriver = didKey.driver();
 const loader = securityLoader();
@@ -65,21 +66,24 @@ describe('ezcap-express', () => {
       error.status.should.equal(500);
       error.text.should.equal('Missing or invalid "authorization" header.');
     });
-    it.skip('should error if authorization header is invalid', async () => {
+    it.skip('should succeed if  header is valid', async () => {
       const url = 'https://example.com/documents';
-      // Admin DID
-      //   const did = 'did:key:z6Mkfeco2NSEPeFV3DkjNSabaCza1EoS3CmqLb1eJ5BriiaR'
-      //   const didDocument = await didKeyDriver.get({did});
-      const {didDocument, keyPairs} = await didKeyDriver.generate();
-      const {invocationSigner, delegationSigner} = getCapabilitySigners({
-        didDocument, keyPairs});
+      // Admin seed
+      const seed = 'z1AZK4h5w5YZkKYEgqtcFfvSbWQ3tZ3ZFgmLsXMZsTVoeK7';
+      const decoded = decodeSecretKeySeed({secretKeySeed: seed});
+
+      const {methodFor} = await didKeyDriver.generate({seed: decoded});
+      const invocationCapabilityKeyPair = methodFor(
+        {purpose: 'capabilityInvocation'});
+
       const zcapClient = new ZcapClient({
         SuiteClass: Ed25519Signature2020,
-        invocationSigner, delegationSigner
+        invocationSigner: invocationCapabilityKeyPair.signer()
       });
+      const doc = {name: 'test'};
 
       try {
-        const response = await zcapClient.write({url});
+        const response = await zcapClient.write({url, json: doc});
         console.log(response);
       } catch(error) {
         console.log(error);
