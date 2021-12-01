@@ -6,28 +6,13 @@ import chai from 'chai';
 import chaiHttp from 'chai-http';
 import express from 'express';
 import {authorizeZcapInvocation} from '..';
-import didIo from 'did-io';
-import didKeyDriver from 'did-method-key';
-import jldl from 'jsonld-document-loader';
+import {securityLoader} from '@digitalbazaar/security-document-loader';
+import zcapCtx from 'zcap-context';
 
-const _documentLoader = new jldl.JsonLdDocumentLoader();
+const loader = securityLoader();
+loader.addStatic(zcapCtx.CONTEXT_URL, zcapCtx.CONTEXT);
 
-didIo.use('key', didKeyDriver.driver());
-
-async function documentLoader(url) {
-  let document;
-  if(url.startsWith('did:')) {
-    document = await didIo.get({did: url, forceConstruct: true});
-    return {
-      contextUrl: null,
-      documentUrl: url,
-      document
-    };
-  }
-
-  // finally, try the base document loader
-  return _documentLoader(url);
-}
+const documentLoader = loader.build();
 
 chai.use(chaiHttp);
 
