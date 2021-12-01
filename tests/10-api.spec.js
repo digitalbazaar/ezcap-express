@@ -8,7 +8,11 @@ import express from 'express';
 import {authorizeZcapInvocation} from '..';
 import {securityLoader} from '@digitalbazaar/security-document-loader';
 import zcapCtx from 'zcap-context';
+import {ZcapClient, getCapabilitySigners} from '@digitalbazaar/ezcap';
+import {Ed25519Signature2020} from '@digitalbazaar/ed25519-signature-2020';
+import * as didKey from '@digitalbazaar/did-method-key';
 
+const didKeyDriver = didKey.driver();
 const loader = securityLoader();
 loader.addStatic(zcapCtx.CONTEXT_URL, zcapCtx.CONTEXT);
 
@@ -62,12 +66,24 @@ describe('ezcap-express', () => {
       error.text.should.equal('Missing or invalid "authorization" header.');
     });
     it.skip('should error if authorization header is invalid', async () => {
-      const res = await requester.post('/documents')
-        .set('authorization', 'Signature keyId="did:key:z6MkmQAxh4enjD3hU9HF8E5L53LAB7ZVeyMPXmKMnSziHdWh#z6MkmQAxh4enjD3hU9HF8E5L53LAB7ZVeyMPXmKMnSziHdWh",headers="(key-id) (created) (expires) (request-target) host capability-invocation content-type digest",signature="/eYQL/op2qt9N9j0aJlaeYUJI5RAyUTM0uwYFsQOFwSOjk3RQ0WBDvG8+N2BMITWEw+4TPBSOqN/8gUZM9E8DA==",created="1638291177",expires="1638291777"')
-        .set('capability-invocation', 'zcap capability="H4sIAAAAAAAAA72TW3OaQBSA_wudvMUSbqI8FSFMEsUxVTTaycMKR9hwWbK7oJDJf-9iYpK204c-NDM7zHLu5ztnn6RvISk4HLhk_ZASzktmyfJew9FXQmO5DVEp14p0_qeKQVhRzBuZVZgDkyFSDUMZ9tQL9aJzuT-XcCRZUkULqwtjtYqtKNOUYhXl-ipRw9Rx1t7daCmidzVQkmVAhUeEIyuFxmr7fprf2odEh-LB1ZJgeOUNLo2JoU3skblZQuPP7vKxX8xbfBWtEhGHwg4oFCFcR78FwqOaBP3DLE3zAPm1sfU2e-7SZnxTpYU9e3yAoV6YQ9W5aadf_tWhJ7L0RI9oizOB5LqoSYg4JoUoCWUZ2UNkh8d_S2I47sT4zWaBaAwC_9MLrxPoTKizhDBuKQNd1-Q0Z7JIwzihgnarDJv1oroMvJxO17mvuiZ365npH206NS9ipi4mNp7jBzADX5sXCduJzLwpQeS5fJnXEije4ZdKxtB00xM2ZbXNcGhnGLHP5Cg9i9RIDJA7bzA_rhAlhFtHQGeafaZ64rxhEpIjKCETqLrvCZa4_xVX16uIuuvw_wpmLuaEeEXhFUlIAXHoJiQESk9RetrFQulbhmoZ5kYY1B9I-sAT8qkreGpkVtGSsK6P9310IYP4tI_vYidBuOie_f_ke_9a1xJlVVdVa_PbFBu6YgSutt89xis90fVNNardAcw3q8mV9xgcdNVYu-WwnxMnwGFEExu5g8ArI2N9B9-3TgyeyfhmOlDNZD3wo9lYen7-CVSP-MvMBAAA",action="sign"')
-        .send({});
-      console.log(res, '<><><><>res');
+      const url = 'https://example.com/documents';
+      // Admin DID
+      //   const did = 'did:key:z6Mkfeco2NSEPeFV3DkjNSabaCza1EoS3CmqLb1eJ5BriiaR'
+      //   const didDocument = await didKeyDriver.get({did});
+      const {didDocument, keyPairs} = await didKeyDriver.generate();
+      const {invocationSigner, delegationSigner} = getCapabilitySigners({
+        didDocument, keyPairs});
+      const zcapClient = new ZcapClient({
+        SuiteClass: Ed25519Signature2020,
+        invocationSigner, delegationSigner
+      });
 
+      try {
+        const response = await zcapClient.write({url});
+        console.log(response);
+      } catch(error) {
+        console.log(error);
+      }
     });
   });
 });

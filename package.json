@@ -29,6 +29,7 @@
     "jsonld-signatures": "^9.3.0"
   },
   "devDependencies": {
+    "@digitalbazaar/did-method-key": "^2.0.0",
     "@digitalbazaar/ed25519-signature-2020": "^3.0.0",
     "@digitalbazaar/ezcap": "^1.0.0",
     "@digitalbazaar/security-document-loader": "^1.1.1",
