@@ -4,7 +4,6 @@
  */
 import {decodeSecretKeySeed} from 'bnid';
 import chai from 'chai';
-import chaiHttp from 'chai-http';
 import express from 'express';
 import * as didKey from '@digitalbazaar/did-method-key';
 import {Ed25519Signature2020} from '@digitalbazaar/ed25519-signature-2020';
@@ -19,7 +18,27 @@ loader.addStatic(zcapCtx.CONTEXT_URL, zcapCtx.CONTEXT);
 
 const documentLoader = loader.build();
 
-chai.use(chaiHttp);
+const TEST_SERVER_PORT = 3000;
+
+function _startServer({app, port = TEST_SERVER_PORT}) {
+  return new Promise(resolve => {
+    app.listen(port, () => {
+      console.log(`Test server listening at http://localhost:${port}`);
+      return resolve();
+    });
+  });
+}
+
+const app = express();
+// mount the test routes
+app.post('/documents', /* ... */);
+
+before(async () => {
+  await _startServer({app});
+  // do other stuff that you need to, or simply
+
+  return _startServer({app});
+});
 
 describe('ezcap-express', () => {
   describe('authorizeZcapInvocation', () => {
