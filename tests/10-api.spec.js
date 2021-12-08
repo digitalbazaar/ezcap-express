@@ -3,7 +3,6 @@
  * Copyright (c) 2021 Digital Bazaar, Inc. All rights reserved.
  */
 import {decodeSecretKeySeed} from 'bnid';
-import chai from 'chai';
 import express from 'express';
 import * as didKey from '@digitalbazaar/did-method-key';
 import {Ed25519Signature2020} from '@digitalbazaar/ed25519-signature-2020';
@@ -11,6 +10,7 @@ import {ZcapClient} from '@digitalbazaar/ezcap';
 import {securityLoader} from '@digitalbazaar/security-document-loader';
 import zcapCtx from 'zcap-context';
 import {authorizeZcapInvocation} from '..';
+import {httpClient} from '@digitalbazaar/http-client';
 
 const didKeyDriver = didKey.driver();
 const loader = securityLoader();
@@ -18,75 +18,67 @@ loader.addStatic(zcapCtx.CONTEXT_URL, zcapCtx.CONTEXT);
 
 const documentLoader = loader.build();
 
-const TEST_SERVER_PORT = 3000;
+const TEST_SERVER_PORT = 5000;
 
 function _startServer({app, port = TEST_SERVER_PORT}) {
   return new Promise(resolve => {
-    app.listen(port, () => {
+    const server = app.listen(port, () => {
       console.log(`Test server listening at http://localhost:${port}`);
-      return resolve();
+      return resolve(server);
     });
   });
 }
 
 const app = express();
 // mount the test routes
-app.post('/documents', /* ... */);
+app.post('/documents',
+  authorizeZcapInvocation({
+    documentLoader,
+    getExpectedTarget() {
+      return {
+        expectedTarget: [
+          'http://localhost:5000', 'http://localhost:5000/documents'
+        ]
+      };
+    },
+    getRootController() {
+    // root controller(Admin DID)
+      return 'did:key:z6Mkfeco2NSEPeFV3DkjNSabaCza1EoS3CmqLb1eJ5BriiaR';
+    },
+    expectedHost: 'http://localhost:5000'
+  }),
+  // eslint-disable-next-line no-unused-vars
+  (req, res, next) => {
+    console.log('gets here::::::::');
+    res.json(req.clientMetadata);
+  });
 
+let server;
 before(async () => {
-  await _startServer({app});
+  server = await _startServer({app});
   // do other stuff that you need to, or simply
-
-  return _startServer({app});
+  // return _startServer({app});
 });
 
+after(async () => {
+  server.close();
+});
 describe('ezcap-express', () => {
-  describe('authorizeZcapInvocation', () => {
-    const app = express();
-
-    // eslint-disable-next-line no-unused-vars
-    function errorHandler(err, req, res, next) {
-      res.status(500).send(err.message);
-    }
-
-    app.post('/documents',
-      authorizeZcapInvocation({
-        documentLoader,
-        getExpectedTarget() {
-          return {
-            expectedTarget: [
-              'https://example.com', 'https://example.com/documents'
-            ]
-          };
-        },
-        getRootController() {
-          // root controller(Admin DID)
-          return 'did:key:z6Mkfeco2NSEPeFV3DkjNSabaCza1EoS3CmqLb1eJ5BriiaR';
-        },
-        expectedHost: 'https://example.com'
-      }),
-      // eslint-disable-next-line no-unused-vars
-      (req, res, next) => {
-        res.json(req.clientMetadata);
-      }
-    );
-    app.use(errorHandler);
-
-    let requester;
-    before(async () => {
-      requester = chai.request(app).keepOpen();
-    });
-    after(async () => {
-      requester.close();
-    });
+  describe.skip('authorizeZcapInvocation', () => {
     it('should error if missing authorization header', async () => {
-      const res = await requester.post('/documents').send({});
-      const {error} = res;
-      error.status.should.equal(500);
-      error.text.should.equal('Missing or invalid "authorization" header.');
+      let res;
+      try {
+        res = await httpClient.post('http://localhost:5000/documents', {json: {}});
+        console.log(res, '<><><><>res');
+      } catch(error) {
+        console.log(error);
+      }
+    //   const {error} = res;
+    //   error.status.should.equal(500);
+    //   error.text.should.equal('Missing or invalid "authorization" header.');
     });
-    it.skip('should succeed if  header is valid', async () => {
-      const url = 'https://example.com/documents';
+    it('should succeed if  header is valid', async () => {
+      const url = 'http://localhost:5000/documents';
       // Admin seed
       const seed = 'z1AZK4h5w5YZkKYEgqtcFfvSbWQ3tZ3ZFgmLsXMZsTVoeK7';
       const decoded = decodeSecretKeySeed({secretKeySeed: seed});
