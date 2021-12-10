@@ -1,5 +1,17 @@
 # @digitalbazaar/ezcap-express Changelog
 
+## 4.2.0 - 2021-12-xx
+
+### Added
+- Allow any controller in a delegated zcap's chain to revoke it. This authority
+  is inherent in delegation and is now reflected in code. This feature gives
+  delegators more fine-grained control to revoke zcaps that they did not
+  delegate directly but one of their delegates did, allowing them to stop
+  specific zcap usage without having to revoke more of the chain. It also
+  gives zcap controllers the ability to revoke their own zcaps (if desired)
+  and adds a sanity check to prevent the revocation of root zcaps that use
+  the `urn:zcap:root:` ID scheme.
+
 ## 4.2.0 - 2021-08-26
 
 ### Added
