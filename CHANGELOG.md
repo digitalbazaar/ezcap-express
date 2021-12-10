@@ -1,6 +1,6 @@
 # @digitalbazaar/ezcap-express Changelog
 
-## 4.2.0 - 2021-12-xx
+## 4.3.0 - 2021-12-10
 
 ### Added
 - Allow any controller in a delegated zcap's chain to revoke it. This authority
