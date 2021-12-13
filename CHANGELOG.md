@@ -1,6 +1,6 @@
 # @digitalbazaar/ezcap-express Changelog
 
-## 4.3.1 - 2021-TBD
+## 4.3.1 - 2021-12-13
 
 ### Fixed
 - Fix `expectedAction` to be `write` for `DELETE` method.
