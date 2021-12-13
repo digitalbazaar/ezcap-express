@@ -1,5 +1,10 @@
 # @digitalbazaar/ezcap-express Changelog
 
+## 4.4.0 - 2021-TBD
+
+### Added
+- Add additional tests.
+
 ## 4.3.1 - 2021-12-13
 
 ### Fixed
