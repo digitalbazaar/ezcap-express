@@ -45,11 +45,11 @@ app.post('/documents',
     // root controller(Admin DID)
       return 'did:key:z6Mkfeco2NSEPeFV3DkjNSabaCza1EoS3CmqLb1eJ5BriiaR';
     },
-    expectedHost: 'http://localhost:5000'
+    expectedHost: 'localhost:5000'
   }),
   // eslint-disable-next-line no-unused-vars
   (req, res, next) => {
-    res.json(req.clientMetadata);
+    res.json({message: 'Post was successful.'});
   });
 
 // eslint-disable-next-line no-unused-vars
@@ -83,9 +83,10 @@ describe('ezcap-express', () => {
       should.exist(err);
       err.status.should.equal(500);
       err.data.name.should.equal('DataError');
-      err.data.message.should.equal('Missing or invalid "authorization" header.');
+      err.data.message.should.equal(
+        'Missing or invalid "authorization" header.');
     });
-    it.skip('should succeed if  header is valid', async () => {
+    it('should succeed if correct data is passed', async () => {
       const url = 'http://localhost:5000/documents';
       // Admin seed
       const seed = 'z1AZK4h5w5YZkKYEgqtcFfvSbWQ3tZ3ZFgmLsXMZsTVoeK7';
@@ -99,14 +100,17 @@ describe('ezcap-express', () => {
         SuiteClass: Ed25519Signature2020,
         invocationSigner: invocationCapabilityKeyPair.signer()
       });
-      const doc = {name: 'test'};
-
+      let res;
+      let err;
       try {
-        const response = await zcapClient.write({url, json: doc});
-        console.log(response);
-      } catch(error) {
-        console.log(error);
+        res = await zcapClient.write({url});
+      } catch(e) {
+        err = e;
       }
+      should.exist(res);
+      should.not.exist(err);
+      res.status.should.equal(200);
+      res.data.message.should.equal('Post was successful.');
     });
   });
 });
