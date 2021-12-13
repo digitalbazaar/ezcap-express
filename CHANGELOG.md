@@ -4,6 +4,8 @@
 
 ### Fixed
 - Fix `expectedAction` to be `write` for `DELETE` method.
+- Throw error when no `expectedAction` is given for a given HTTP method and
+  provide defaults for all common HTTP methods.
 
 ## 4.3.0 - 2021-12-10
 
