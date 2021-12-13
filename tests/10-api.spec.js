@@ -69,23 +69,6 @@ after(async () => {
 });
 describe('ezcap-express', () => {
   describe('authorizeZcapInvocation', () => {
-    it('should error if missing authorization header', async () => {
-      let res;
-      let err;
-      try {
-        res = await httpClient.post('http://localhost:5000/documents', {
-          json: {}
-        });
-      } catch(e) {
-        err = e;
-      }
-      should.not.exist(res);
-      should.exist(err);
-      err.status.should.equal(500);
-      err.data.name.should.equal('DataError');
-      err.data.message.should.equal(
-        'Missing or invalid "authorization" header.');
-    });
     it('should succeed if correct data is passed', async () => {
       const url = 'http://localhost:5000/documents';
       // Admin seed
@@ -111,6 +94,50 @@ describe('ezcap-express', () => {
       should.not.exist(err);
       res.status.should.equal(200);
       res.data.message.should.equal('Post was successful.');
+    });
+    it('should error if missing authorization header', async () => {
+      let res;
+      let err;
+      try {
+        res = await httpClient.post('http://localhost:5000/documents', {
+          json: {}
+        });
+      } catch(e) {
+        err = e;
+      }
+      should.not.exist(res);
+      should.exist(err);
+      err.status.should.equal(500);
+      err.data.name.should.equal('DataError');
+      err.data.message.should.equal(
+        'Missing or invalid "authorization" header.');
+    });
+    it('should throw forbidden error if the authorized invoker does not match' +
+    'the controller', async () => {
+      const url = 'http://localhost:5000/documents';
+      // Use a different seed
+      const seed = 'z1AbCFiBWpN89ug5hcxUfa6TzpGoowH7DBidgL8zPu6v5RV';
+      const decoded = decodeSecretKeySeed({secretKeySeed: seed});
+
+      const {methodFor} = await didKeyDriver.generate({seed: decoded});
+      const invocationCapabilityKeyPair = methodFor(
+        {purpose: 'capabilityInvocation'});
+
+      const zcapClient = new ZcapClient({
+        SuiteClass: Ed25519Signature2020,
+        invocationSigner: invocationCapabilityKeyPair.signer()
+      });
+      let res;
+      let err;
+      try {
+        res = await zcapClient.write({url});
+      } catch(e) {
+        err = e;
+      }
+      should.not.exist(res);
+      should.exist(err);
+      err.status.should.equal(403);
+      err.message.should.equal('Forbidden');
     });
   });
 });
