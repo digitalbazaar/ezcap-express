@@ -49,9 +49,13 @@ app.post('/documents',
   }),
   // eslint-disable-next-line no-unused-vars
   (req, res, next) => {
-    console.log('gets here::::::::');
     res.json(req.clientMetadata);
   });
+
+// eslint-disable-next-line no-unused-vars
+app.use(function(err, req, res, next) {
+  res.status(500).send({message: err.message, name: err.name});
+});
 
 let server;
 before(async () => {
@@ -64,20 +68,24 @@ after(async () => {
   server.close();
 });
 describe('ezcap-express', () => {
-  describe.skip('authorizeZcapInvocation', () => {
+  describe('authorizeZcapInvocation', () => {
     it('should error if missing authorization header', async () => {
       let res;
+      let err;
       try {
-        res = await httpClient.post('http://localhost:5000/documents', {json: {}});
-        console.log(res, '<><><><>res');
-      } catch(error) {
-        console.log(error);
+        res = await httpClient.post('http://localhost:5000/documents', {
+          json: {}
+        });
+      } catch(e) {
+        err = e;
       }
-    //   const {error} = res;
-    //   error.status.should.equal(500);
-    //   error.text.should.equal('Missing or invalid "authorization" header.');
+      should.not.exist(res);
+      should.exist(err);
+      err.status.should.equal(500);
+      err.data.name.should.equal('DataError');
+      err.data.message.should.equal('Missing or invalid "authorization" header.');
     });
-    it('should succeed if  header is valid', async () => {
+    it.skip('should succeed if  header is valid', async () => {
       const url = 'http://localhost:5000/documents';
       // Admin seed
       const seed = 'z1AZK4h5w5YZkKYEgqtcFfvSbWQ3tZ3ZFgmLsXMZsTVoeK7';
