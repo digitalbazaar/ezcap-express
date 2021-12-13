@@ -10,7 +10,8 @@ import {ZcapClient} from '@digitalbazaar/ezcap';
 import {securityLoader} from '@digitalbazaar/security-document-loader';
 import zcapCtx from 'zcap-context';
 import {authorizeZcapInvocation} from '..';
-import {httpClient} from '@digitalbazaar/http-client';
+import {httpClient, DEFAULT_HEADERS} from '@digitalbazaar/http-client';
+import {signCapabilityInvocation} from 'http-signature-zcap-invoke';
 
 const didKeyDriver = didKey.driver();
 const loader = securityLoader();
@@ -50,6 +51,24 @@ app.post('/documents',
   // eslint-disable-next-line no-unused-vars
   (req, res, next) => {
     res.json({message: 'Post was successful.'});
+  });
+app.get('/test/:id',
+  authorizeZcapInvocation({
+    documentLoader,
+    getRootController() {
+      // root controller(Admin DID)
+      return 'did:key:z6Mkfeco2NSEPeFV3DkjNSabaCza1EoS3CmqLb1eJ5BriiaR';
+    },
+    getExpectedTarget({req}) {
+      const expectedTarget =
+            `http://localhost:5000/documents/${encodeURIComponent(req.params.id)}`;
+      return {expectedTarget};
+    },
+    expectedHost: 'localhost:5000'
+  }),
+  // eslint-disable-next-line no-unused-vars
+  (req, res, next) => {
+    res.json({message: 'Get request was successful.'});
   });
 
 // eslint-disable-next-line no-unused-vars
@@ -138,6 +157,43 @@ describe('ezcap-express', () => {
       should.exist(err);
       err.status.should.equal(403);
       err.message.should.equal('Forbidden');
+    });
+
+    it('should throw error if expected root capability does not match given ' +
+      'capability', async () => {
+      const url = 'http://localhost:5000/test/xyz';
+      const url2 = 'http://localhost:6000/test/abc';
+
+      // Admin seed
+      const seed = 'z1AZK4h5w5YZkKYEgqtcFfvSbWQ3tZ3ZFgmLsXMZsTVoeK7';
+      const decoded = decodeSecretKeySeed({secretKeySeed: seed});
+
+      const {methodFor} = await didKeyDriver.generate({seed: decoded});
+      const invocationCapabilityKeyPair = methodFor(
+        {purpose: 'capabilityInvocation'});
+
+      const headers = await signCapabilityInvocation({
+        url, method: 'get',
+        headers: DEFAULT_HEADERS,
+        capability: 'urn:zcap:root:' + encodeURIComponent(url2),
+        invocationSigner: invocationCapabilityKeyPair.signer(),
+        capabilityAction: 'read'
+      });
+
+      let err;
+      let res;
+      try {
+        res = await httpClient.get(url, {headers});
+      } catch(e) {
+        err = e;
+      }
+      should.not.exist(res);
+      should.exist(err);
+      err.status.should.equal(500);
+      err.data.message.should.equal('The given capability ' +
+        '"urn:zcap:root:http%3A%2F%2Flocalhost%3A6000%2Ftest%2Fabc" is not ' +
+        'an expected root capability ' +
+        '"urn:zcap:root:http%3A%2F%2Flocalhost%3A5000%2Fdocuments%2Fxyz".');
     });
   });
 });
