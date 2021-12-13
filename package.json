@@ -16,7 +16,10 @@
     "generate-readme": "jsdoc2md -t readme-template.hbs lib/*.js > README.md",
     "lint": "eslint .",
     "test": "npm run test-node",
-    "test-node": "cross-env NODE_ENV=test mocha -r esm --preserve-symlinks -t 30000 -A -R ${REPORTER:-spec} --require tests/test-mocha.js tests/*.spec.js"
+    "test-node": "cross-env NODE_ENV=test mocha -r esm --preserve-symlinks -t 30000 -A -R ${REPORTER:-spec} --require tests/test-mocha.js tests/*.spec.js",
+    "coverage": "cross-env NODE_ENV=test ESM_OPTIONS='{cache:false}' nyc --reporter=lcov --reporter=text-summary npm test",
+    "coverage-ci": "cross-env NODE_ENV=test ESM_OPTIONS='{cache:false}' nyc --reporter=lcovonly npm test",
+    "coverage-report": "nyc report"
   },
   "dependencies": {
     "@digitalbazaar/ed25519-signature-2020": "^3.0.0",
@@ -44,6 +47,7 @@
     "express": "^4.17.1",
     "jsdoc-to-markdown": "^6.0.1",
     "mocha": "^8.1.3",
+    "nyc": "^15.1.0",
     "zcap-context": "^1.2.1"
   },
   "engines": {
