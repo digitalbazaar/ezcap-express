@@ -8,7 +8,7 @@ import {ZcapClient} from '@digitalbazaar/ezcap';
 import {httpClient, DEFAULT_HEADERS} from '@digitalbazaar/http-client';
 import {securityLoader} from '@digitalbazaar/security-document-loader';
 import zcapCtx from 'zcap-context';
-import {authorizeZcapInvocation} from '../lib';
+import {authorizeZcapInvocation, authorizeZcapRevocation} from '../lib';
 import {getInvocationSigner} from './helpers';
 import https from 'https';
 import fs from 'fs';
@@ -80,6 +80,27 @@ app.get('/test/:id',
     res.json({message: 'Get request was successful.'});
   });
 
+app.post('/revoke',
+  authorizeZcapRevocation({
+    documentLoader,
+    suiteFactory() {
+      return new Ed25519Signature2020();
+    },
+    getRootController() {
+      // root controller(Admin DID)
+      return 'did:key:z6Mkfeco2NSEPeFV3DkjNSabaCza1EoS3CmqLb1eJ5BriiaR';
+    },
+    getExpectedTarget() {
+      return {
+        expectedTarget: ['http://localhost:5000/revoke']
+      };
+    },
+    expectedHost: 'localhost:5000'
+  }),
+  // eslint-disable-next-line no-unused-vars
+  (req, res, next) => {
+    res.json({message: 'Revocation was successful.'});
+  });
 // eslint-disable-next-line no-unused-vars
 app.use(function(err, req, res, next) {
   res.status(500).send({message: err.message, name: err.name});
@@ -284,6 +305,64 @@ describe('ezcap-express', () => {
       err.status.should.equal(500);
       err.data.message.should.equal('Return value from "getExpectedTarget" ' +
         'must be an object with "expectedTarget" set to a string or an array.');
+    });
+  });
+  describe('authorizeZcapRevocation', () => {
+    it.skip('make it work', async () => {
+      const url = 'http://localhost:5000/revoke';
+
+      // Admin seed
+      const adminSeed = 'z1AZK4h5w5YZkKYEgqtcFfvSbWQ3tZ3ZFgmLsXMZsTVoeK7';
+      // eslint-disable-next-line no-undef
+      const decoded1 = decodeSecretKeySeed({secretKeySeed: adminSeed});
+
+      // eslint-disable-next-line no-undef
+      const {methodFor} = await didKeyDriver.generate({seed: decoded1});
+      const invocationCapabilityKeyPair = methodFor(
+        {purpose: 'capabilityInvocation'});
+
+      const capability = {
+        '@context': [
+          'https://w3id.org/zcap/v1',
+          'https://w3id.org/security/suites/ed25519-2020/v1'
+        ],
+        id: 'urn:zcap:delegated:zCqXTsiZBQgPnUW9XN2piyV',
+        // eslint-disable-next-line max-len
+        parentCapability: 'urn:zcap:root:https%3A%2F%2Flocalhost%3A5000%2Frevoke',
+        invocationTarget: 'https://localhost:5000/revoke',
+        controller: 'did:key:z6MknBxrctS4KsfiBsEaXsfnrnfNYTvDjVpLYYUAN6PX2EfG',
+        expires: '2022-12-14T22:05:42Z',
+        allowedAction: [
+          'read'
+        ],
+        proof: {
+          type: 'Ed25519Signature2020',
+          created: '2021-12-14T22:05:42Z',
+          // eslint-disable-next-line max-len
+          verificationMethod: 'did:key:z6Mkfeco2NSEPeFV3DkjNSabaCza1EoS3CmqLb1eJ5BriiaR#z6Mkfeco2NSEPeFV3DkjNSabaCza1EoS3CmqLb1eJ5BriiaR',
+          proofPurpose: 'capabilityDelegation',
+          capabilityChain: [
+            'urn:zcap:root:https%3A%2F%2Flocalhost%3A5000%2Frevoke'
+          ],
+          // eslint-disable-next-line max-len
+          proofValue: 'z4on8Ei5Xwb3iS1g248MdgMapRqShYsy56VgabLSp1e8XUTSCjSjwaRwZYRoqYCCrFWAaYTwGfGeQc7qLRGvpN4C8'
+        }
+      };
+      const zcapClient = new ZcapClient({
+        SuiteClass: Ed25519Signature2020,
+        invocationSigner: invocationCapabilityKeyPair.signer()
+      });
+      let err;
+      let res;
+      try {
+        res = await zcapClient.write({url, json: capability});
+        console.log(res);
+      } catch(e) {
+        err = e;
+      }
+      console.log(err);
+      should.exist(res);
+      should.not.exist(err);
     });
   });
 });
