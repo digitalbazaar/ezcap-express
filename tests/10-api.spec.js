@@ -104,7 +104,6 @@ describe('ezcap-express', () => {
         res = await zcapClient.write({url, json: {name: 'test'}});
       } catch(e) {
         err = e;
-        console.log(err, '<><><><>err');
       }
       should.exist(res);
       should.not.exist(err);
