@@ -17,11 +17,12 @@ loader.addStatic(zcapCtx.CONTEXT_URL, zcapCtx.CONTEXT);
 const documentLoader = loader.build();
 
 const TEST_SERVER_PORT = 5000;
+const BASE_URL = `http://localhost:${TEST_SERVER_PORT}`;
 
 function _startServer({app, port = TEST_SERVER_PORT}) {
   return new Promise(resolve => {
     const server = app.listen(port, () => {
-      console.log(`Test server listening at http://localhost:${port}`);
+      console.log(`Test server listening at ${BASE_URL}`);
       return resolve(server);
     });
   });
@@ -36,7 +37,7 @@ app.post('/documents',
     documentLoader,
     getExpectedTarget() {
       return {
-        expectedTarget: ['http://localhost:5000/documents']
+        expectedTarget: [`${BASE_URL}/documents`]
       };
     },
     getRootController() {
@@ -59,7 +60,7 @@ app.get('/test/:id',
     },
     getExpectedTarget({req}) {
       const expectedTarget =
-        `http://localhost:5000/documents/${encodeURIComponent(req.params.id)}`;
+        `${BASE_URL}/documents/${encodeURIComponent(req.params.id)}`;
       // intentionally set return value to not be an object
       return expectedTarget;
     },
@@ -87,8 +88,8 @@ after(async () => {
 });
 describe('ezcap-express', () => {
   describe('authorizeZcapInvocation', () => {
-    it('should succeed if correct data is passed', async () => {
-      const url = 'http://localhost:5000/documents';
+    it.only('should succeed if correct data is passed', async () => {
+      const url = `${BASE_URL}/documents`;
       // Admin seed
       const seed = 'z1AZK4h5w5YZkKYEgqtcFfvSbWQ3tZ3ZFgmLsXMZsTVoeK7';
       const invocationSigner = await getInvocationSigner({seed});
@@ -103,6 +104,7 @@ describe('ezcap-express', () => {
         res = await zcapClient.write({url, json: {name: 'test'}});
       } catch(e) {
         err = e;
+        console.log(err, '<><><><>err');
       }
       should.exist(res);
       should.not.exist(err);
@@ -113,7 +115,7 @@ describe('ezcap-express', () => {
       let res;
       let err;
       try {
-        res = await httpClient.post('http://localhost:5000/documents', {
+        res = await httpClient.post(`${BASE_URL}/documents`, {
           json: {}
         });
       } catch(e) {
@@ -128,7 +130,7 @@ describe('ezcap-express', () => {
     });
     it('should throw forbidden error if the authorized invoker does not ' +
       'match the controller', async () => {
-      const url = 'http://localhost:5000/documents';
+      const url = `${BASE_URL}/documents`;
       // Use a different seed
       const seed = 'z1AbCFiBWpN89ug5hcxUfa6TzpGoowH7DBidgL8zPu6v5RV';
       const invocationSigner = await getInvocationSigner({seed});
@@ -151,7 +153,7 @@ describe('ezcap-express', () => {
     });
     it('should throw error if digest header is not present when http body is ' +
       'present', async () => {
-      const url = 'http://localhost:5000/documents';
+      const url = `${BASE_URL}/documents`;
       // Use a different seed
       const seed = 'z1AbCFiBWpN89ug5hcxUfa6TzpGoowH7DBidgL8zPu6v5RV';
       const invocationSigner = await getInvocationSigner({seed});
@@ -176,7 +178,7 @@ describe('ezcap-express', () => {
     });
     it('should throw error if digest header value does not match digest ' +
       'of body', async () => {
-      const url = 'http://localhost:5000/documents';
+      const url = `${BASE_URL}/documents`;
       // Admin seed
       const seed = 'z1AZK4h5w5YZkKYEgqtcFfvSbWQ3tZ3ZFgmLsXMZsTVoeK7';
       const invocationSigner = await getInvocationSigner({seed});
@@ -206,8 +208,8 @@ describe('ezcap-express', () => {
     });
     it('should throw error if expected root capability does not match given ' +
       'capability', async () => {
-      const url = 'http://localhost:5000/documents';
-      const url2 = 'http://localhost:5000/test/abc';
+      const url = `${BASE_URL}/documents`;
+      const url2 = `${BASE_URL}/test/abc`;
 
       // Admin seed
       const seed = 'z1AZK4h5w5YZkKYEgqtcFfvSbWQ3tZ3ZFgmLsXMZsTVoeK7';
@@ -239,7 +241,7 @@ describe('ezcap-express', () => {
     });
     it('should throw error if return value from "getExpectedTarget" is not ' +
       'an object with "expectedTarget" set to string or array', async () => {
-      const url = 'http://localhost:5000/test/xyz';
+      const url = `${BASE_URL}/test/xyz`;
 
       // Admin seed
       const seed = 'z1AZK4h5w5YZkKYEgqtcFfvSbWQ3tZ3ZFgmLsXMZsTVoeK7';
