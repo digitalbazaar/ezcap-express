@@ -10,6 +10,8 @@ import {securityLoader} from '@digitalbazaar/security-document-loader';
 import zcapCtx from 'zcap-context';
 import {authorizeZcapInvocation} from '../lib';
 import {getInvocationSigner} from './helpers';
+import https from 'https';
+import fs from 'fs';
 
 const loader = securityLoader();
 loader.addStatic(zcapCtx.CONTEXT_URL, zcapCtx.CONTEXT);
@@ -17,11 +19,18 @@ loader.addStatic(zcapCtx.CONTEXT_URL, zcapCtx.CONTEXT);
 const documentLoader = loader.build();
 
 const TEST_SERVER_PORT = 5000;
-const BASE_URL = `http://localhost:${TEST_SERVER_PORT}`;
+const BASE_URL = `https://localhost:${TEST_SERVER_PORT}`;
 
+const key = fs.readFileSync(__dirname + '/key.pem');
+const cert = fs.readFileSync(__dirname + '/cert.pem');
+
+const agent = new https.Agent({
+  rejectUnauthorized: false
+});
 function _startServer({app, port = TEST_SERVER_PORT}) {
   return new Promise(resolve => {
-    const server = app.listen(port, () => {
+    const server = https.createServer({key, cert}, app);
+    server.listen(port, () => {
       console.log(`Test server listening at ${BASE_URL}`);
       return resolve(server);
     });
@@ -88,13 +97,14 @@ after(async () => {
 });
 describe('ezcap-express', () => {
   describe('authorizeZcapInvocation', () => {
-    it.only('should succeed if correct data is passed', async () => {
+    it('should succeed if correct data is passed', async () => {
       const url = `${BASE_URL}/documents`;
       // Admin seed
       const seed = 'z1AZK4h5w5YZkKYEgqtcFfvSbWQ3tZ3ZFgmLsXMZsTVoeK7';
       const invocationSigner = await getInvocationSigner({seed});
 
       const zcapClient = new ZcapClient({
+        agent,
         SuiteClass: Ed25519Signature2020,
         invocationSigner
       });
@@ -115,6 +125,7 @@ describe('ezcap-express', () => {
       let err;
       try {
         res = await httpClient.post(`${BASE_URL}/documents`, {
+          agent,
           json: {}
         });
       } catch(e) {
@@ -135,6 +146,7 @@ describe('ezcap-express', () => {
       const invocationSigner = await getInvocationSigner({seed});
 
       const zcapClient = new ZcapClient({
+        agent,
         SuiteClass: Ed25519Signature2020,
         invocationSigner
       });
@@ -158,6 +170,7 @@ describe('ezcap-express', () => {
       const invocationSigner = await getInvocationSigner({seed});
 
       const zcapClient = new ZcapClient({
+        agent,
         SuiteClass: Ed25519Signature2020,
         invocationSigner
       });
@@ -194,7 +207,11 @@ describe('ezcap-express', () => {
       let err;
       let res;
       try {
-        res = await httpClient.post(url, {headers, json: {name: 'not test'}});
+        res = await httpClient.post(url, {
+          agent,
+          headers,
+          json: {name: 'not test'}
+        });
       } catch(e) {
         err = e;
       }
@@ -226,7 +243,11 @@ describe('ezcap-express', () => {
       let err;
       let res;
       try {
-        res = await httpClient.post(url, {headers, json: {name: 'test'}});
+        res = await httpClient.post(url, {
+          agent,
+          headers,
+          json: {name: 'test'}
+        });
       } catch(e) {
         err = e;
       }
@@ -234,9 +255,9 @@ describe('ezcap-express', () => {
       should.exist(err);
       err.status.should.equal(500);
       err.data.message.should.equal('The given capability ' +
-        '"urn:zcap:root:http%3A%2F%2Flocalhost%3A5000%2Ftest%2Fabc" is not ' +
+        '"urn:zcap:root:https%3A%2F%2Flocalhost%3A5000%2Ftest%2Fabc" is not ' +
         'an expected root capability ' +
-        '"urn:zcap:root:http%3A%2F%2Flocalhost%3A5000%2Fdocuments".');
+        '"urn:zcap:root:https%3A%2F%2Flocalhost%3A5000%2Fdocuments".');
     });
     it('should throw error if return value from "getExpectedTarget" is not ' +
       'an object with "expectedTarget" set to string or array', async () => {
@@ -247,6 +268,7 @@ describe('ezcap-express', () => {
       const invocationSigner = await getInvocationSigner({seed});
 
       const zcapClient = new ZcapClient({
+        agent,
         SuiteClass: Ed25519Signature2020,
         invocationSigner
       });
