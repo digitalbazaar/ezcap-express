@@ -42,7 +42,7 @@ app.post('/documents',
       };
     },
     getRootController() {
-    // root controller(Admin DID)
+      // root controller(Admin DID)
       return 'did:key:z6Mkfeco2NSEPeFV3DkjNSabaCza1EoS3CmqLb1eJ5BriiaR';
     },
     expectedHost: 'localhost:5000'
