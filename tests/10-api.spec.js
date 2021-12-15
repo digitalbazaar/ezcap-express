@@ -95,7 +95,25 @@ app.post('/revoke',
         expectedTarget: ['http://localhost:5000/revoke']
       };
     },
-    expectedHost: 'localhost:5000'
+    expectedHost: 'localhost:5000',
+    // eslint-disable-next-line no-unused-vars
+    inspectCapabilityChain({capabilityChain, capabilityChainMeta}) {
+      // collect the capability IDs and delegators for the capabilities in
+      // the chain
+    //   const capabilities = [];
+    //   for(const [i, capability] of capabilityChain.entries()) {
+    // eslint-disable-next-line max-len
+    //     const [{purposeResult}] = capabilityChainMeta[i].verifyResult.results;
+    //     if(purposeResult && purposeResult.delegator) {
+    //       capabilities.push({
+    //         capabilityId: capability.id,
+    //         delegator: purposeResult.delegator.id,
+    //       });
+    //     }
+    //   }
+
+      return {valid: true};
+    }
   }),
   // eslint-disable-next-line no-unused-vars
   (req, res, next) => {
@@ -103,6 +121,7 @@ app.post('/revoke',
   });
 // eslint-disable-next-line no-unused-vars
 app.use(function(err, req, res, next) {
+  console.log(err);
   res.status(500).send({message: err.message, name: err.name});
 });
 
@@ -308,7 +327,7 @@ describe('ezcap-express', () => {
     });
   });
   describe('authorizeZcapRevocation', () => {
-    it.skip('make it work', async () => {
+    it.skip('should work', async () => {
       const url = 'http://localhost:5000/revoke';
 
       // Admin seed
@@ -326,26 +345,26 @@ describe('ezcap-express', () => {
           'https://w3id.org/zcap/v1',
           'https://w3id.org/security/suites/ed25519-2020/v1'
         ],
-        id: 'urn:zcap:delegated:zCqXTsiZBQgPnUW9XN2piyV',
+        id: 'urn:zcap:delegated:zk75WPqCUf73Q6KtVYC31t',
         // eslint-disable-next-line max-len
-        parentCapability: 'urn:zcap:root:https%3A%2F%2Flocalhost%3A5000%2Frevoke',
-        invocationTarget: 'https://localhost:5000/revoke',
+        parentCapability: 'urn:zcap:root:http%3A%2F%2Flocalhost%3A5000%2Frevoke',
+        invocationTarget: 'http://localhost:5000/revoke',
         controller: 'did:key:z6MknBxrctS4KsfiBsEaXsfnrnfNYTvDjVpLYYUAN6PX2EfG',
-        expires: '2022-12-14T22:05:42Z',
+        expires: '2022-12-15T03:53:29Z',
         allowedAction: [
-          'read'
+          'write'
         ],
         proof: {
           type: 'Ed25519Signature2020',
-          created: '2021-12-14T22:05:42Z',
+          created: '2021-12-15T03:53:29Z',
           // eslint-disable-next-line max-len
           verificationMethod: 'did:key:z6Mkfeco2NSEPeFV3DkjNSabaCza1EoS3CmqLb1eJ5BriiaR#z6Mkfeco2NSEPeFV3DkjNSabaCza1EoS3CmqLb1eJ5BriiaR',
           proofPurpose: 'capabilityDelegation',
           capabilityChain: [
-            'urn:zcap:root:https%3A%2F%2Flocalhost%3A5000%2Frevoke'
+            'urn:zcap:root:http%3A%2F%2Flocalhost%3A5000%2Frevoke'
           ],
           // eslint-disable-next-line max-len
-          proofValue: 'z4on8Ei5Xwb3iS1g248MdgMapRqShYsy56VgabLSp1e8XUTSCjSjwaRwZYRoqYCCrFWAaYTwGfGeQc7qLRGvpN4C8'
+          proofValue: 'zueke7BuFGZ5zjSFQLfPFa4K2CCMKBLbzxgxkNi8wL4qJNywpJRvjghJW9JQ3JXNsjZVQRhSmXDmd9tV3NibD7do'
         }
       };
       const zcapClient = new ZcapClient({
@@ -356,11 +375,9 @@ describe('ezcap-express', () => {
       let res;
       try {
         res = await zcapClient.write({url, json: capability});
-        console.log(res);
       } catch(e) {
         err = e;
       }
-      console.log(err);
       should.exist(res);
       should.not.exist(err);
     });
