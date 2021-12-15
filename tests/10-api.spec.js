@@ -121,7 +121,6 @@ app.post('/revoke',
   });
 // eslint-disable-next-line no-unused-vars
 app.use(function(err, req, res, next) {
-  console.log(err);
   res.status(500).send({message: err.message, name: err.name});
 });
 
@@ -332,13 +331,7 @@ describe('ezcap-express', () => {
 
       // Admin seed
       const adminSeed = 'z1AZK4h5w5YZkKYEgqtcFfvSbWQ3tZ3ZFgmLsXMZsTVoeK7';
-      // eslint-disable-next-line no-undef
-      const decoded1 = decodeSecretKeySeed({secretKeySeed: adminSeed});
-
-      // eslint-disable-next-line no-undef
-      const {methodFor} = await didKeyDriver.generate({seed: decoded1});
-      const invocationCapabilityKeyPair = methodFor(
-        {purpose: 'capabilityInvocation'});
+      const invocationSigner = await getInvocationSigner({seed: adminSeed});
 
       const capability = {
         '@context': [
@@ -369,7 +362,7 @@ describe('ezcap-express', () => {
       };
       const zcapClient = new ZcapClient({
         SuiteClass: Ed25519Signature2020,
-        invocationSigner: invocationCapabilityKeyPair.signer()
+        invocationSigner
       });
       let err;
       let res;
