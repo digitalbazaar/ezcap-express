@@ -1,18 +1,16 @@
 /*!
  * Copyright (c) 2021 Digital Bazaar, Inc. All rights reserved.
  */
-import {decodeSecretKeySeed} from 'bnid';
 import express from 'express';
 import {signCapabilityInvocation} from 'http-signature-zcap-invoke';
-import * as didKey from '@digitalbazaar/did-method-key';
 import {Ed25519Signature2020} from '@digitalbazaar/ed25519-signature-2020';
 import {ZcapClient} from '@digitalbazaar/ezcap';
 import {httpClient, DEFAULT_HEADERS} from '@digitalbazaar/http-client';
 import {securityLoader} from '@digitalbazaar/security-document-loader';
 import zcapCtx from 'zcap-context';
 import {authorizeZcapInvocation} from '../lib';
+import {getInvocationSigner} from './helpers';
 
-const didKeyDriver = didKey.driver();
 const loader = securityLoader();
 loader.addStatic(zcapCtx.CONTEXT_URL, zcapCtx.CONTEXT);
 
@@ -93,15 +91,11 @@ describe('ezcap-express', () => {
       const url = 'http://localhost:5000/documents';
       // Admin seed
       const seed = 'z1AZK4h5w5YZkKYEgqtcFfvSbWQ3tZ3ZFgmLsXMZsTVoeK7';
-      const decoded = decodeSecretKeySeed({secretKeySeed: seed});
-
-      const {methodFor} = await didKeyDriver.generate({seed: decoded});
-      const invocationCapabilityKeyPair = methodFor(
-        {purpose: 'capabilityInvocation'});
+      const invocationSigner = await getInvocationSigner({seed});
 
       const zcapClient = new ZcapClient({
         SuiteClass: Ed25519Signature2020,
-        invocationSigner: invocationCapabilityKeyPair.signer()
+        invocationSigner
       });
       let res;
       let err;
@@ -137,15 +131,11 @@ describe('ezcap-express', () => {
       const url = 'http://localhost:5000/documents';
       // Use a different seed
       const seed = 'z1AbCFiBWpN89ug5hcxUfa6TzpGoowH7DBidgL8zPu6v5RV';
-      const decoded = decodeSecretKeySeed({secretKeySeed: seed});
-
-      const {methodFor} = await didKeyDriver.generate({seed: decoded});
-      const invocationCapabilityKeyPair = methodFor(
-        {purpose: 'capabilityInvocation'});
+      const invocationSigner = await getInvocationSigner({seed});
 
       const zcapClient = new ZcapClient({
         SuiteClass: Ed25519Signature2020,
-        invocationSigner: invocationCapabilityKeyPair.signer()
+        invocationSigner
       });
       let res;
       let err;
@@ -159,20 +149,16 @@ describe('ezcap-express', () => {
       err.status.should.equal(403);
       err.message.should.equal('Forbidden');
     });
-    it('should throw error if digest header is not present when HTTP body is ' +
+    it('should throw error if digest header is not present when http body is ' +
       'present', async () => {
       const url = 'http://localhost:5000/documents';
       // Use a different seed
       const seed = 'z1AbCFiBWpN89ug5hcxUfa6TzpGoowH7DBidgL8zPu6v5RV';
-      const decoded = decodeSecretKeySeed({secretKeySeed: seed});
-
-      const {methodFor} = await didKeyDriver.generate({seed: decoded});
-      const invocationCapabilityKeyPair = methodFor(
-        {purpose: 'capabilityInvocation'});
+      const invocationSigner = await getInvocationSigner({seed});
 
       const zcapClient = new ZcapClient({
         SuiteClass: Ed25519Signature2020,
-        invocationSigner: invocationCapabilityKeyPair.signer()
+        invocationSigner
       });
       let res;
       let err;
@@ -193,17 +179,13 @@ describe('ezcap-express', () => {
       const url = 'http://localhost:5000/documents';
       // Admin seed
       const seed = 'z1AZK4h5w5YZkKYEgqtcFfvSbWQ3tZ3ZFgmLsXMZsTVoeK7';
-      const decoded = decodeSecretKeySeed({secretKeySeed: seed});
-
-      const {methodFor} = await didKeyDriver.generate({seed: decoded});
-      const invocationCapabilityKeyPair = methodFor(
-        {purpose: 'capabilityInvocation'});
+      const invocationSigner = await getInvocationSigner({seed});
 
       const headers = await signCapabilityInvocation({
         url, method: 'post',
         headers: DEFAULT_HEADERS,
         capability: 'urn:zcap:root:' + encodeURIComponent(url),
-        invocationSigner: invocationCapabilityKeyPair.signer(),
+        invocationSigner,
         capabilityAction: 'write',
         json: {name: 'test'}
       });
@@ -229,17 +211,13 @@ describe('ezcap-express', () => {
 
       // Admin seed
       const seed = 'z1AZK4h5w5YZkKYEgqtcFfvSbWQ3tZ3ZFgmLsXMZsTVoeK7';
-      const decoded = decodeSecretKeySeed({secretKeySeed: seed});
-
-      const {methodFor} = await didKeyDriver.generate({seed: decoded});
-      const invocationCapabilityKeyPair = methodFor(
-        {purpose: 'capabilityInvocation'});
+      const invocationSigner = await getInvocationSigner({seed});
 
       const headers = await signCapabilityInvocation({
         url, method: 'post',
         headers: DEFAULT_HEADERS,
         capability: 'urn:zcap:root:' + encodeURIComponent(url2),
-        invocationSigner: invocationCapabilityKeyPair.signer(),
+        invocationSigner,
         capabilityAction: 'write',
         json: {name: 'test'}
       });
@@ -265,15 +243,11 @@ describe('ezcap-express', () => {
 
       // Admin seed
       const seed = 'z1AZK4h5w5YZkKYEgqtcFfvSbWQ3tZ3ZFgmLsXMZsTVoeK7';
-      const decoded = decodeSecretKeySeed({secretKeySeed: seed});
-
-      const {methodFor} = await didKeyDriver.generate({seed: decoded});
-      const invocationCapabilityKeyPair = methodFor(
-        {purpose: 'capabilityInvocation'});
+      const invocationSigner = await getInvocationSigner({seed});
 
       const zcapClient = new ZcapClient({
         SuiteClass: Ed25519Signature2020,
-        invocationSigner: invocationCapabilityKeyPair.signer()
+        invocationSigner
       });
       let res;
       let err;
