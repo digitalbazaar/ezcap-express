@@ -12,6 +12,7 @@ import {authorizeZcapInvocation, authorizeZcapRevocation} from '../lib';
 import {getInvocationSigner} from './helpers';
 import https from 'https';
 import fs from 'fs';
+import ed25519 from 'ed25519-signature-2020-context';
 
 const loader = securityLoader();
 loader.addStatic(zcapCtx.CONTEXT_URL, zcapCtx.CONTEXT);
@@ -92,7 +93,7 @@ app.post('/revoke',
     },
     getExpectedTarget() {
       return {
-        expectedTarget: ['http://localhost:5000/revoke']
+        expectedTarget: `${BASE_URL}/revoke`
       };
     },
     expectedHost: 'localhost:5000',
@@ -327,7 +328,7 @@ describe('ezcap-express', () => {
   });
   describe('authorizeZcapRevocation', () => {
     it.skip('should work', async () => {
-      const url = 'http://localhost:5000/revoke';
+      const url = `${BASE_URL}/revoke`;
 
       // Admin seed
       const adminSeed = 'z1AZK4h5w5YZkKYEgqtcFfvSbWQ3tZ3ZFgmLsXMZsTVoeK7';
@@ -335,32 +336,32 @@ describe('ezcap-express', () => {
 
       const capability = {
         '@context': [
-          'https://w3id.org/zcap/v1',
-          'https://w3id.org/security/suites/ed25519-2020/v1'
+          zcapCtx.CONTEXT_URL,
+          ed25519.CONTEXT_URL
         ],
-        id: 'urn:zcap:delegated:zk75WPqCUf73Q6KtVYC31t',
-        // eslint-disable-next-line max-len
-        parentCapability: 'urn:zcap:root:http%3A%2F%2Flocalhost%3A5000%2Frevoke',
-        invocationTarget: 'http://localhost:5000/revoke',
+        id: 'urn:zcap:delegated:zWH71D96BNXEZtKoL3i1oPx',
+        parentCapability: 'urn:zcap:root:' + encodeURIComponent(url),
+        invocationTarget: 'https://localhost:5000/revoke',
         controller: 'did:key:z6MknBxrctS4KsfiBsEaXsfnrnfNYTvDjVpLYYUAN6PX2EfG',
-        expires: '2022-12-15T03:53:29Z',
+        expires: '2022-12-15T22:19:48Z',
         allowedAction: [
           'write'
         ],
         proof: {
           type: 'Ed25519Signature2020',
-          created: '2021-12-15T03:53:29Z',
+          created: '2021-12-15T22:19:48Z',
           // eslint-disable-next-line max-len
           verificationMethod: 'did:key:z6Mkfeco2NSEPeFV3DkjNSabaCza1EoS3CmqLb1eJ5BriiaR#z6Mkfeco2NSEPeFV3DkjNSabaCza1EoS3CmqLb1eJ5BriiaR',
           proofPurpose: 'capabilityDelegation',
           capabilityChain: [
-            'urn:zcap:root:http%3A%2F%2Flocalhost%3A5000%2Frevoke'
+            'urn:zcap:root:' + encodeURIComponent(url)
           ],
           // eslint-disable-next-line max-len
-          proofValue: 'zueke7BuFGZ5zjSFQLfPFa4K2CCMKBLbzxgxkNi8wL4qJNywpJRvjghJW9JQ3JXNsjZVQRhSmXDmd9tV3NibD7do'
+          proofValue: 'z5GZd6jsempDxKChEw6xK1wLwWhS24RDcGngdNyMESbLsVKmpCaB6foQt6xK1MfwgdgLVQjuSgGk1bam7X9kLE4oN'
         }
       };
       const zcapClient = new ZcapClient({
+        agent,
         SuiteClass: Ed25519Signature2020,
         invocationSigner
       });
