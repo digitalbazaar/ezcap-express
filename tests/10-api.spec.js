@@ -97,22 +97,7 @@ app.post('/revoke',
       };
     },
     expectedHost: 'localhost:5000',
-    // eslint-disable-next-line no-unused-vars
-    inspectCapabilityChain({capabilityChain, capabilityChainMeta}) {
-      // collect the capability IDs and delegators for the capabilities in
-      // the chain
-    //   const capabilities = [];
-    //   for(const [i, capability] of capabilityChain.entries()) {
-    // eslint-disable-next-line max-len
-    //     const [{purposeResult}] = capabilityChainMeta[i].verifyResult.results;
-    //     if(purposeResult && purposeResult.delegator) {
-    //       capabilities.push({
-    //         capabilityId: capability.id,
-    //         delegator: purposeResult.delegator.id,
-    //       });
-    //     }
-    //   }
-
+    inspectCapabilityChain() {
       return {valid: true};
     }
   }),
@@ -327,7 +312,7 @@ describe('ezcap-express', () => {
     });
   });
   describe('authorizeZcapRevocation', () => {
-    it.skip('should work', async () => {
+    it('should succeed if correct data is passed', async () => {
       const url = `${BASE_URL}/revoke`;
 
       // Admin seed
@@ -373,7 +358,84 @@ describe('ezcap-express', () => {
         err = e;
       }
       should.exist(res);
+      res.status.should.equal(200);
       should.not.exist(err);
+      res.data.message.should.equal('Revocation was successful.');
     });
+    it('throws error if capability id starts with "urn:zcap:root"',
+      async () => {
+        const url = `${BASE_URL}/revoke`;
+
+        // Admin seed
+        const adminSeed = 'z1AZK4h5w5YZkKYEgqtcFfvSbWQ3tZ3ZFgmLsXMZsTVoeK7';
+        const invocationSigner = await getInvocationSigner({seed: adminSeed});
+
+        const rootCapability = {
+          '@context': [
+            zcapCtx.CONTEXT_URL,
+            ed25519.CONTEXT_URL
+          ],
+          id: 'urn:zcap:root:zWH71D96BNXEZtKoL3i1oPx',
+        };
+        'urn:zcap:root:' + encodeURIComponent(url);
+        const zcapClient = new ZcapClient({
+          agent,
+          SuiteClass: Ed25519Signature2020,
+          invocationSigner
+        });
+        let err;
+        let res;
+        try {
+          res = await zcapClient.write({url, json: rootCapability});
+        } catch(e) {
+          err = e;
+        }
+        should.not.exist(res);
+        should.exist(err);
+        err.data.name.should.equal('NotAllowedError');
+        err.data.message.should.equal('A root capability cannot be revoked.');
+      });
+    it('throws error if capability is invalid',
+      async () => {
+        const url = `${BASE_URL}/revoke`;
+
+        // Admin seed
+        const adminSeed = 'z1AZK4h5w5YZkKYEgqtcFfvSbWQ3tZ3ZFgmLsXMZsTVoeK7';
+        const invocationSigner = await getInvocationSigner({seed: adminSeed});
+
+        // Invalid capability since it does not contain proof
+        const invalidCapability = {
+          '@context': [
+            zcapCtx.CONTEXT_URL,
+            ed25519.CONTEXT_URL
+          ],
+          id: 'urn:zcap:delegated:zWH71D96BNXEZtKoL3i1oPx',
+          parentCapability: 'urn:zcap:root:' + encodeURIComponent(url),
+          invocationTarget: 'https://localhost:5000/revoke',
+          // eslint-disable-next-line max-len
+          controller: 'did:key:z6MknBxrctS4KsfiBsEaXsfnrnfNYTvDjVpLYYUAN6PX2EfG',
+          expires: '2022-12-15T22:19:48Z',
+          allowedAction: [
+            'write'
+          ]
+        };
+        const zcapClient = new ZcapClient({
+          agent,
+          SuiteClass: Ed25519Signature2020,
+          invocationSigner
+        });
+        let err;
+        let res;
+        try {
+          res = await zcapClient.write({url, json: invalidCapability});
+        } catch(e) {
+          err = e;
+        }
+        should.not.exist(res);
+        should.exist(err);
+        err.data.name.should.equal('DataError');
+        err.data.message.should.equal(
+          'The provided capability delegation is invalid.');
+      });
   });
 });
