@@ -98,6 +98,7 @@ app.post('/revoke',
     },
     expectedHost: 'localhost:5000',
     inspectCapabilityChain() {
+      // checking previously revoked zcaps is not part of the tests
       return {valid: true};
     }
   }),
