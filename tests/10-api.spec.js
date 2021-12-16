@@ -81,7 +81,7 @@ app.get('/test/:id',
     res.json({message: 'Get request was successful.'});
   });
 
-app.post('/revoke',
+app.post('/revocations/:id',
   authorizeZcapRevocation({
     documentLoader,
     suiteFactory() {
@@ -91,9 +91,11 @@ app.post('/revoke',
       // root controller(Admin DID)
       return 'did:key:z6Mkfeco2NSEPeFV3DkjNSabaCza1EoS3CmqLb1eJ5BriiaR';
     },
-    getExpectedTarget() {
+    getExpectedTarget({req}) {
       return {
-        expectedTarget: `${BASE_URL}/revoke`
+        expectedTarget: [
+          `${BASE_URL}/revocations/${req.params.id}`
+        ]
       };
     },
     expectedHost: 'localhost:5000',
@@ -314,28 +316,27 @@ describe('ezcap-express', () => {
   });
   describe('authorizeZcapRevocation', () => {
     it('should succeed if correct data is passed', async () => {
-      const url = `${BASE_URL}/revoke`;
+      const url = `${BASE_URL}/revocations/some-id`;
 
-      // Admin seed
-      const adminSeed = 'z1AZK4h5w5YZkKYEgqtcFfvSbWQ3tZ3ZFgmLsXMZsTVoeK7';
-      const invocationSigner = await getInvocationSigner({seed: adminSeed});
+      const bobSeed = 'z1AnZce3gUvSfVbsbqpgH9LNtmBuve4zQdYwdpEp22YQzB4';
+      const invocationSigner = await getInvocationSigner({seed: bobSeed});
 
       const capability = {
         '@context': [
           zcapCtx.CONTEXT_URL,
           ed25519.CONTEXT_URL
         ],
-        id: 'urn:zcap:delegated:zWH71D96BNXEZtKoL3i1oPx',
+        id: 'urn:zcap:delegated:zMdWQBpdnyg1m26Kx2HVya4',
         parentCapability: 'urn:zcap:root:' + encodeURIComponent(url),
-        invocationTarget: 'https://localhost:5000/revoke',
-        controller: 'did:key:z6MknBxrctS4KsfiBsEaXsfnrnfNYTvDjVpLYYUAN6PX2EfG',
-        expires: '2022-12-15T22:19:48Z',
+        invocationTarget: 'https://localhost:5000/revocations/some-id',
+        controller: 'did:key:z6Mki68HpLhwaUZub3dqbmGCiMm9GfjzX9pBiK8hvezxuCix',
+        expires: '2022-12-16T22:03:14Z',
         allowedAction: [
           'write'
         ],
         proof: {
           type: 'Ed25519Signature2020',
-          created: '2021-12-15T22:19:48Z',
+          created: '2021-12-16T22:03:14Z',
           // eslint-disable-next-line max-len
           verificationMethod: 'did:key:z6Mkfeco2NSEPeFV3DkjNSabaCza1EoS3CmqLb1eJ5BriiaR#z6Mkfeco2NSEPeFV3DkjNSabaCza1EoS3CmqLb1eJ5BriiaR',
           proofPurpose: 'capabilityDelegation',
@@ -343,7 +344,7 @@ describe('ezcap-express', () => {
             'urn:zcap:root:' + encodeURIComponent(url)
           ],
           // eslint-disable-next-line max-len
-          proofValue: 'z5GZd6jsempDxKChEw6xK1wLwWhS24RDcGngdNyMESbLsVKmpCaB6foQt6xK1MfwgdgLVQjuSgGk1bam7X9kLE4oN'
+          proofValue: 'z54VSEwtmS8HbEGe97h2fy2gHhyDw8aFwmgMZ2ENPjY4YLSf6gcJiE9zPJ1MxkDiKti5NkpAW5M7QotNNtUhRHBe1'
         }
       };
       const zcapClient = new ZcapClient({
@@ -365,11 +366,10 @@ describe('ezcap-express', () => {
     });
     it('throws error if capability id starts with "urn:zcap:root"',
       async () => {
-        const url = `${BASE_URL}/revoke`;
+        const url = `${BASE_URL}/revocations/some-id`;
 
-        // Admin seed
-        const adminSeed = 'z1AZK4h5w5YZkKYEgqtcFfvSbWQ3tZ3ZFgmLsXMZsTVoeK7';
-        const invocationSigner = await getInvocationSigner({seed: adminSeed});
+        const bobSeed = 'z1AnZce3gUvSfVbsbqpgH9LNtmBuve4zQdYwdpEp22YQzB4';
+        const invocationSigner = await getInvocationSigner({seed: bobSeed});
 
         const rootCapability = {
           '@context': [
@@ -398,11 +398,10 @@ describe('ezcap-express', () => {
       });
     it('throws error if capability is invalid',
       async () => {
-        const url = `${BASE_URL}/revoke`;
+        const url = `${BASE_URL}/revocations/some-id`;
 
-        // Admin seed
-        const adminSeed = 'z1AZK4h5w5YZkKYEgqtcFfvSbWQ3tZ3ZFgmLsXMZsTVoeK7';
-        const invocationSigner = await getInvocationSigner({seed: adminSeed});
+        const bobSeed = 'z1AnZce3gUvSfVbsbqpgH9LNtmBuve4zQdYwdpEp22YQzB4';
+        const invocationSigner = await getInvocationSigner({seed: bobSeed});
 
         // Invalid capability since it does not contain proof
         const invalidCapability = {
