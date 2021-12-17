@@ -1,9 +1,9 @@
 # @digitalbazaar/ezcap-express Changelog
 
-## 4.5.0 - 2021-TBD
+## 4.5.0 - 2021-12-17
 
 ### Fixed
-- Added `_createGetRevocationRootController` wrapper around
+- Add `_createGetRevocationRootController` wrapper around
   `_getRevocationRootController` and pass `getRootController` to it.
 
 ### Added
