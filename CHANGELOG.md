@@ -1,5 +1,17 @@
 # @digitalbazaar/ezcap-express Changelog
 
+## 5.0.0 - 2022-01-xx
+
+### Added
+- Add optional parameters `maxChainLength`, `maxDelegationTtl`, and
+  `maxTimestampDelta` to allow for more fine grained control. These parameters
+  all have defaults in zcapld that could previously not be set to other
+  values at this layer.
+
+### Fixed
+- **BREAKING**: HTTP status error codes have been fixed so that client errors
+  will result in 4xx status codes instead of 5xx status codes.
+
 ## 4.5.0 - 2021-12-17
 
 ### Fixed

@@ -1,18 +1,18 @@
 /*!
- * Copyright (c) 2021 Digital Bazaar, Inc. All rights reserved.
+ * Copyright (c) 2021-2022 Digital Bazaar, Inc. All rights reserved.
  */
-import express from 'express';
-import {signCapabilityInvocation} from 'http-signature-zcap-invoke';
-import {Ed25519Signature2020} from '@digitalbazaar/ed25519-signature-2020';
-import {ZcapClient} from '@digitalbazaar/ezcap';
-import {httpClient, DEFAULT_HEADERS} from '@digitalbazaar/http-client';
-import {securityLoader} from '@digitalbazaar/security-document-loader';
-import zcapCtx from 'zcap-context';
 import {authorizeZcapInvocation, authorizeZcapRevocation} from '../lib';
-import {getInvocationSigner} from './helpers';
-import https from 'https';
-import fs from 'fs';
 import ed25519 from 'ed25519-signature-2020-context';
+import {Ed25519Signature2020} from '@digitalbazaar/ed25519-signature-2020';
+import express from 'express';
+import {ZcapClient} from '@digitalbazaar/ezcap';
+import {getInvocationSigner} from './helpers';
+import {httpClient, DEFAULT_HEADERS} from '@digitalbazaar/http-client';
+import fs from 'fs';
+import https from 'https';
+import {securityLoader} from '@digitalbazaar/security-document-loader';
+import {signCapabilityInvocation} from 'http-signature-zcap-invoke';
+import zcapCtx from 'zcap-context';
 
 const loader = securityLoader();
 loader.addStatic(zcapCtx.CONTEXT_URL, zcapCtx.CONTEXT);
@@ -38,6 +38,16 @@ function _startServer({app, port = TEST_SERVER_PORT}) {
   });
 }
 
+// set to `true` to debug errors
+const DEBUG = false;
+let _logError;
+if(DEBUG) {
+  _logError = function _logError({error}) {
+    console.error(error);
+    throw error;
+  };
+}
+
 const app = express();
 app.use(express.json());
 
@@ -54,7 +64,8 @@ app.post('/documents',
       // root controller(Admin DID)
       return 'did:key:z6Mkfeco2NSEPeFV3DkjNSabaCza1EoS3CmqLb1eJ5BriiaR';
     },
-    expectedHost: 'localhost:5000'
+    expectedHost: 'localhost:5000',
+    onError: _logError
   }),
   // eslint-disable-next-line no-unused-vars
   (req, res, next) => {
@@ -74,7 +85,8 @@ app.get('/test/:id',
       // intentionally set return value to not be an object
       return expectedTarget;
     },
-    expectedHost: 'localhost:5000'
+    expectedHost: 'localhost:5000',
+    onError: _logError
   }),
   // eslint-disable-next-line no-unused-vars
   (req, res, next) => {
@@ -102,7 +114,8 @@ app.post('/revocations/:id',
     inspectCapabilityChain() {
       // checking previously revoked zcaps is not part of the tests
       return {valid: true};
-    }
+    },
+    onError: _logError
   }),
   // eslint-disable-next-line no-unused-vars
   (req, res, next) => {
@@ -129,7 +142,8 @@ app.post('/revocations',
     inspectCapabilityChain() {
       // checking previously revoked zcaps is not part of the tests
       return {valid: true};
-    }
+    },
+    onError: _logError
   }),
   // eslint-disable-next-line no-unused-vars
   (req, res, next) => {
@@ -137,7 +151,11 @@ app.post('/revocations',
   });
 // eslint-disable-next-line no-unused-vars
 app.use(function(err, req, res, next) {
-  res.status(500).send({message: err.message, name: err.name});
+  if(res.statusCode < 400) {
+    // default to 500 error code
+    res.status(500);
+  }
+  res.send({message: err.message, name: err.name});
 });
 
 let server;
@@ -188,7 +206,7 @@ describe('ezcap-express', () => {
       }
       should.not.exist(res);
       should.exist(err);
-      err.status.should.equal(500);
+      err.status.should.equal(400);
       err.data.name.should.equal('DataError');
       err.data.message.should.equal(
         'Missing or invalid "authorization" header.');
@@ -238,7 +256,7 @@ describe('ezcap-express', () => {
       }
       should.not.exist(res);
       should.exist(err);
-      err.status.should.equal(500);
+      err.status.should.equal(400);
       err.data.name.should.equal('DataError');
       err.data.message.should.equal(
         'A "digest" header must be present when an HTTP body is present.');
@@ -272,13 +290,13 @@ describe('ezcap-express', () => {
       }
       should.not.exist(res);
       should.exist(err);
-      err.status.should.equal(500);
+      err.status.should.equal(400);
       err.data.name.should.equal('DataError');
       err.data.message.should.equal(
         'The "digest" header value does not match digest of body.');
     });
-    it('should throw error if expected root capability does not match given ' +
-      'capability', async () => {
+    it('should throw error if expected invocation target does not ' +
+      'match capability invocation target', async () => {
       const url = `${BASE_URL}/documents`;
       const url2 = `${BASE_URL}/test/abc`;
 
@@ -308,11 +326,7 @@ describe('ezcap-express', () => {
       }
       should.not.exist(res);
       should.exist(err);
-      err.status.should.equal(500);
-      err.data.message.should.equal('The given capability ' +
-        '"urn:zcap:root:https%3A%2F%2Flocalhost%3A5000%2Ftest%2Fabc" is not ' +
-        'an expected root capability ' +
-        '"urn:zcap:root:https%3A%2F%2Flocalhost%3A5000%2Fdocuments".');
+      err.status.should.equal(403);
     });
     it('should throw error if return value from "getExpectedTarget" is not ' +
       'an object with "expectedTarget" set to string or array', async () => {
