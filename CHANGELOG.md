@@ -8,9 +8,23 @@
   all have defaults in zcapld that could previously not be set to other
   values at this layer.
 
+### Changed
+- **BREAKING**: Replace broken-out expected value parameters (e.g.,
+  `expectedHost`, `expectedTarget`), including duplicative / optional
+  parameters (e.g., `expectedAction`, `getExpectedAction`) with a single
+  async function `getExpectedValues({req})` that returns all required (and any
+  optional) expected values. This removes some optionality and simplifies
+  function signatures -- also allowing callers to decide how they want
+  to provide this information (e.g., by calling individual functions from
+  within `getExpectedValues` or whatever else).
+
 ### Fixed
 - **BREAKING**: HTTP status error codes have been fixed so that client errors
   will result in 4xx status codes instead of 5xx status codes.
+
+### Remove
+- **BREAKING**: Remove `getExpectedRootCapabilityId` as there have been no
+  use cases that have needed it.
 
 ## 4.5.0 - 2021-12-17
 
