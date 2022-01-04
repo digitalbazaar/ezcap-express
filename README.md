@@ -194,8 +194,8 @@ These are the two assumptions that ezcap makes and with those two assumptions,
 ## authorizeZcapInvocation(options) ⇒ <code>function</code>
 Authorizes an incoming request.
 
-**Kind**: global function  
-**Returns**: <code>function</code> - Returns an Express.js middleware route handler.  
+**Kind**: global function
+**Returns**: <code>function</code> - Returns an Express.js middleware route handler.
 
 | Param | Type | Description |
 | --- | --- | --- |
@@ -204,11 +204,9 @@ Authorizes an incoming request.
 | [options.expectedAction] | <code>string</code> | The expected action for the   invoked capability. |
 | options.expectedHost | <code>string</code> | The expected host for the invoked   capability. |
 | [options.expectedTarget] | <code>string</code> \| <code>Array.&lt;string&gt;</code> | The expected   target(s) for the invoked capability. |
-| [options.getExpectedRootCapabilityId] | <code>function</code> | Used to return the   expected root capability identifiers for the expected targets. |
 | options.getRootController | <code>function</code> | Used to get the root capability   controller for the given root capability ID. |
 | [options.logger] | <code>object</code> | The logger instance to use. |
 | [options.suite] | <code>object</code> | The expected cryptography suite to use when   verifying digital signatures. |
-
 
 ## Contribute
 

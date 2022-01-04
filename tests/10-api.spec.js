@@ -3,11 +3,10 @@
  */
 import {authorizeZcapInvocation, authorizeZcapRevocation} from '../lib';
 import {createRootCapability} from '@digitalbazaar/zcapld';
-import ed25519 from 'ed25519-signature-2020-context';
 import {Ed25519Signature2020} from '@digitalbazaar/ed25519-signature-2020';
 import express from 'express';
 import {ZcapClient} from '@digitalbazaar/ezcap';
-import {getInvocationSigner} from './helpers';
+import {delegate, getInvocationSigner} from './helpers';
 import {httpClient, DEFAULT_HEADERS} from '@digitalbazaar/http-client';
 import fs from 'fs';
 import https from 'https';
@@ -26,14 +25,18 @@ const BASE_URL = `https://localhost:${TEST_SERVER_PORT}`;
 const key = fs.readFileSync(__dirname + '/key.pem');
 const cert = fs.readFileSync(__dirname + '/cert.pem');
 
-const DEFAULT_ROOT_CONTROLLER =
+// admin party / root controller used in tests
+const ADMIN_SEED = 'z1AZK4h5w5YZkKYEgqtcFfvSbWQ3tZ3ZFgmLsXMZsTVoeK7';
+const ROOT_CONTROLLER =
   'did:key:z6Mkfeco2NSEPeFV3DkjNSabaCza1EoS3CmqLb1eJ5BriiaR';
-const DEFAULT_ROOT_VM =
-  `${DEFAULT_ROOT_CONTROLLER}#${DEFAULT_ROOT_CONTROLLER.substring(8)}`;
 
-const agent = new https.Agent({
-  rejectUnauthorized: false
-});
+// delegate party used in tests
+const DELEGATE_SEED = 'z1AnZce3gUvSfVbsbqpgH9LNtmBuve4zQdYwdpEp22YQzB4';
+const DELEGATE_ID = 'did:key:z6Mki68HpLhwaUZub3dqbmGCiMm9GfjzX9pBiK8hvezxuCix';
+
+// HTTPS agent that ignores TLS errors as test server has invalid cert
+const agent = new https.Agent({rejectUnauthorized: false});
+
 function _startServer({app, port = TEST_SERVER_PORT}) {
   return new Promise(resolve => {
     const server = https.createServer({key, cert}, app);
@@ -61,16 +64,16 @@ app.use(express.json());
 app.post('/documents',
   authorizeZcapInvocation({
     documentLoader,
-    getExpectedTarget() {
+    getExpectedValues() {
       return {
-        expectedTarget: [`${BASE_URL}/documents`]
+        host: 'localhost:5000',
+        rootInvocationTarget: [`${BASE_URL}/documents`]
       };
     },
     getRootController() {
       // root controller(Admin DID)
-      return DEFAULT_ROOT_CONTROLLER;
+      return ROOT_CONTROLLER;
     },
-    expectedHost: 'localhost:5000',
     onError: _logError
   }),
   // eslint-disable-next-line no-unused-vars
@@ -78,20 +81,20 @@ app.post('/documents',
     res.json({message: 'Post request was successful.'});
   });
 
+// this route tests a broken `getExpectedValues` with a bad return value
 app.get('/test/:id',
   authorizeZcapInvocation({
     documentLoader,
-    getRootController() {
-      // root controller(Admin DID)
-      return DEFAULT_ROOT_CONTROLLER;
-    },
-    getExpectedTarget({req}) {
-      const expectedTarget =
+    getExpectedValues({req}) {
+      const rootInvocationTarget =
         `${BASE_URL}/documents/${encodeURIComponent(req.params.id)}`;
       // intentionally set return value to not be an object
-      return expectedTarget;
+      return rootInvocationTarget;
     },
-    expectedHost: 'localhost:5000',
+    getRootController() {
+      // root controller(Admin DID)
+      return ROOT_CONTROLLER;
+    },
     onError: _logError
   }),
   // eslint-disable-next-line no-unused-vars
@@ -99,60 +102,44 @@ app.get('/test/:id',
     res.json({message: 'Get request was successful.'});
   });
 
-app.post('/revocations/:id',
+app.post('/service-objects/:localId/revocations/:zcapId',
   authorizeZcapRevocation({
     documentLoader,
-    suiteFactory() {
-      return new Ed25519Signature2020();
-    },
-    getRootController() {
-      // root controller(Admin DID)
-      return DEFAULT_ROOT_CONTROLLER;
-    },
-    getExpectedTarget({req}) {
+    getExpectedValues({req}) {
+      const {localId, zcapId} = req.params;
+      const serviceObjectBaseUrl =
+        `${BASE_URL}/service-objects/${encodeURIComponent(localId)}`;
       return {
-        expectedTarget: [
-          `${BASE_URL}/revocations/${req.params.id}`
+        host: 'localhost:5000',
+        rootInvocationTarget: [
+          // allow root zcap for the service object itself so that the
+          // authority to submit any zcap for revocation can be delegated
+          serviceObjectBaseUrl,
+          // allow root zcap for revoking a specific zcap by any controller
+          // in its chain
+          `${serviceObjectBaseUrl}/revocations/${encodeURIComponent(zcapId)}`
         ]
       };
     },
-    expectedHost: 'localhost:5000',
+    getRootController() {
+      // root controller(Admin DID)
+      return ROOT_CONTROLLER;
+    },
     inspectCapabilityChain() {
       // checking previously revoked zcaps is not part of the tests
       return {valid: true};
     },
-    onError: _logError
-  }),
-  // eslint-disable-next-line no-unused-vars
-  (req, res, next) => {
-    res.json({message: 'Revocation was successful.'});
-  });
-app.post('/revocations',
-  authorizeZcapRevocation({
-    documentLoader,
+    onError: _logError,
     suiteFactory() {
       return new Ed25519Signature2020();
-    },
-    getRootController() {
-      // root controller(Admin DID)
-      return DEFAULT_ROOT_CONTROLLER;
-    },
-    getExpectedTarget() {
-      return {
-        expectedTarget: [
-          `${BASE_URL}/revocations`
-        ]
-      };
-    },
-    expectedHost: 'localhost:5000',
-    inspectCapabilityChain() {
-      // checking previously revoked zcaps is not part of the tests
-      return {valid: true};
-    },
-    onError: _logError
+    }
   }),
   // eslint-disable-next-line no-unused-vars
   (req, res, next) => {
+    const {zcapId} = req.params;
+    if(!zcapId.includes(':')) {
+      return next(new Error('zCap ID must be an absolute URI.'));
+    }
     res.json({message: 'Revocation was successful.'});
   });
 // eslint-disable-next-line no-unused-vars
@@ -167,8 +154,6 @@ app.use(function(err, req, res, next) {
 let server;
 before(async () => {
   server = await _startServer({app});
-  // do other stuff that you need to, or simply
-  // return _startServer({app});
 });
 
 after(async () => {
@@ -178,9 +163,7 @@ describe('ezcap-express', () => {
   describe('authorizeZcapInvocation', () => {
     it('should succeed if correct data is passed', async () => {
       const url = `${BASE_URL}/documents`;
-      // Admin seed
-      const seed = 'z1AZK4h5w5YZkKYEgqtcFfvSbWQ3tZ3ZFgmLsXMZsTVoeK7';
-      const invocationSigner = await getInvocationSigner({seed});
+      const invocationSigner = await getInvocationSigner({seed: ADMIN_SEED});
 
       const zcapClient = new ZcapClient({
         agent,
@@ -270,9 +253,7 @@ describe('ezcap-express', () => {
     it('should throw error if digest header value does not match digest ' +
       'of body', async () => {
       const url = `${BASE_URL}/documents`;
-      // Admin seed
-      const seed = 'z1AZK4h5w5YZkKYEgqtcFfvSbWQ3tZ3ZFgmLsXMZsTVoeK7';
-      const invocationSigner = await getInvocationSigner({seed});
+      const invocationSigner = await getInvocationSigner({seed: ADMIN_SEED});
 
       const headers = await signCapabilityInvocation({
         url, method: 'post',
@@ -306,9 +287,7 @@ describe('ezcap-express', () => {
       const url = `${BASE_URL}/documents`;
       const url2 = `${BASE_URL}/test/abc`;
 
-      // Admin seed
-      const seed = 'z1AZK4h5w5YZkKYEgqtcFfvSbWQ3tZ3ZFgmLsXMZsTVoeK7';
-      const invocationSigner = await getInvocationSigner({seed});
+      const invocationSigner = await getInvocationSigner({seed: ADMIN_SEED});
 
       const headers = await signCapabilityInvocation({
         url, method: 'post',
@@ -338,9 +317,7 @@ describe('ezcap-express', () => {
       'an object with "expectedTarget" set to string or array', async () => {
       const url = `${BASE_URL}/test/xyz`;
 
-      // Admin seed
-      const seed = 'z1AZK4h5w5YZkKYEgqtcFfvSbWQ3tZ3ZFgmLsXMZsTVoeK7';
-      const invocationSigner = await getInvocationSigner({seed});
+      const invocationSigner = await getInvocationSigner({seed: ADMIN_SEED});
 
       const zcapClient = new ZcapClient({
         agent,
@@ -357,45 +334,24 @@ describe('ezcap-express', () => {
       should.not.exist(res);
       should.exist(err);
       err.status.should.equal(500);
-      err.data.message.should.equal('Return value from "getExpectedTarget" ' +
-        'must be an object with "expectedTarget" set to a string or an array.');
+      err.data.message.should.equal(
+        '"getExpectedValues" must return an object.');
     });
   });
   describe('authorizeZcapRevocation', () => {
-    describe('/revocations/:id', () => {
+    describe('/service-objects/:localId/revocations/:zcapId', () => {
       it('should succeed if correct data is passed', async () => {
-        const url = `${BASE_URL}/revocations/some-id`;
+        // delegate zcap to access a service object from admin to delegate
+        const serviceObjectId = `${BASE_URL}/service-objects/123`;
+        const delegatedZcap = await delegate({
+          seed: ADMIN_SEED,
+          rootInvocationTarget: serviceObjectId,
+          controller: DELEGATE_ID
+        });
 
-        const bobSeed = 'z1AnZce3gUvSfVbsbqpgH9LNtmBuve4zQdYwdpEp22YQzB4';
-        const invocationSigner = await getInvocationSigner({seed: bobSeed});
-
-        const capability = {
-          '@context': [
-            zcapCtx.CONTEXT_URL,
-            ed25519.CONTEXT_URL
-          ],
-          id: 'urn:zcap:delegated:zMdWQBpdnyg1m26Kx2HVya4',
-          parentCapability: 'urn:zcap:root:' + encodeURIComponent(url),
-          invocationTarget: 'https://localhost:5000/revocations/some-id',
-          // eslint-disable-next-line max-len
-          controller: 'did:key:z6Mki68HpLhwaUZub3dqbmGCiMm9GfjzX9pBiK8hvezxuCix',
-          expires: '2022-12-16T22:03:14Z',
-          allowedAction: [
-            'write'
-          ],
-          proof: {
-            type: 'Ed25519Signature2020',
-            created: '2021-12-16T22:03:14Z',
-            // eslint-disable-next-line max-len
-            verificationMethod: DEFAULT_ROOT_VM,
-            proofPurpose: 'capabilityDelegation',
-            capabilityChain: [
-              'urn:zcap:root:' + encodeURIComponent(url)
-            ],
-            // eslint-disable-next-line max-len
-            proofValue: 'z54VSEwtmS8HbEGe97h2fy2gHhyDw8aFwmgMZ2ENPjY4YLSf6gcJiE9zPJ1MxkDiKti5NkpAW5M7QotNNtUhRHBe1'
-          }
-        };
+        // revoke zcap
+        const invocationSigner = await getInvocationSigner(
+          {seed: DELEGATE_SEED});
         const zcapClient = new ZcapClient({
           agent,
           SuiteClass: Ed25519Signature2020,
@@ -404,7 +360,9 @@ describe('ezcap-express', () => {
         let err;
         let res;
         try {
-          res = await zcapClient.write({url, json: capability});
+          const url = `${serviceObjectId}/revocations/` +
+            `${encodeURIComponent(delegatedZcap.id)}`;
+          res = await zcapClient.write({url, json: delegatedZcap});
         } catch(e) {
           err = e;
         }
@@ -413,112 +371,16 @@ describe('ezcap-express', () => {
         should.not.exist(err);
         res.data.message.should.equal('Revocation was successful.');
       });
-      it('throws error if capability id starts with "urn:zcap:root"',
-        async () => {
-          const url = `${BASE_URL}/revocations/some-id`;
-
-          const bobSeed = 'z1AnZce3gUvSfVbsbqpgH9LNtmBuve4zQdYwdpEp22YQzB4';
-          const invocationSigner = await getInvocationSigner({seed: bobSeed});
-
-          const rootCapability = createRootCapability({
-            controller: DEFAULT_ROOT_CONTROLLER,
-            invocationTarget: url
-          });
-          const zcapClient = new ZcapClient({
-            agent,
-            SuiteClass: Ed25519Signature2020,
-            invocationSigner
-          });
-          let err;
-          let res;
-          try {
-            res = await zcapClient.write({url, json: rootCapability});
-          } catch(e) {
-            err = e;
-          }
-          should.not.exist(res);
-          should.exist(err);
-          err.data.name.should.equal('NotAllowedError');
-          err.data.message.should.equal('A root capability cannot be revoked.');
+      it('throws error if capability id starts with ' +
+        '"urn:zcap:root:"', async () => {
+        // try to revoke root zcap
+        const serviceObjectId = `${BASE_URL}/service-objects/123`;
+        const rootCapability = createRootCapability({
+          controller: ROOT_CONTROLLER,
+          invocationTarget: serviceObjectId
         });
-      it('throws error if capability is invalid',
-        async () => {
-          const url = `${BASE_URL}/revocations/some-id`;
 
-          const bobSeed = 'z1AnZce3gUvSfVbsbqpgH9LNtmBuve4zQdYwdpEp22YQzB4';
-          const invocationSigner = await getInvocationSigner({seed: bobSeed});
-
-          // Invalid capability since it does not contain proof
-          const invalidCapability = {
-            '@context': [
-              zcapCtx.CONTEXT_URL,
-              ed25519.CONTEXT_URL
-            ],
-            id: 'urn:zcap:delegated:zWH71D96BNXEZtKoL3i1oPx',
-            parentCapability: 'urn:zcap:root:' + encodeURIComponent(url),
-            invocationTarget: 'https://localhost:5000/revoke',
-            // eslint-disable-next-line max-len
-            controller: 'did:key:z6MknBxrctS4KsfiBsEaXsfnrnfNYTvDjVpLYYUAN6PX2EfG',
-            expires: '2022-12-15T22:19:48Z',
-            allowedAction: [
-              'write'
-            ]
-          };
-          const zcapClient = new ZcapClient({
-            agent,
-            SuiteClass: Ed25519Signature2020,
-            invocationSigner
-          });
-          let err;
-          let res;
-          try {
-            res = await zcapClient.write({url, json: invalidCapability});
-          } catch(e) {
-            err = e;
-          }
-          should.not.exist(res);
-          should.exist(err);
-          err.data.name.should.equal('DataError');
-          err.data.message.should.equal(
-            'The provided capability delegation is invalid.');
-        });
-    });
-    describe('/revocations', () => {
-      it('should defer to "getRootController" if `/revocations/` is not in ' +
-        'the root invocation target', async () => {
-
-        const url = `${BASE_URL}/revocations`;
-
-        const adminSeed = 'z1AZK4h5w5YZkKYEgqtcFfvSbWQ3tZ3ZFgmLsXMZsTVoeK7';
-        const invocationSigner = await getInvocationSigner({seed: adminSeed});
-
-        const capability = {
-          '@context': [
-            zcapCtx.CONTEXT_URL,
-            ed25519.CONTEXT_URL
-          ],
-          id: 'urn:zcap:delegated:zAC5i8cRwdJYcsWSh2PUtZB',
-          parentCapability: 'urn:zcap:root:' + encodeURIComponent(url),
-          invocationTarget: 'https://localhost:5000/revocations',
-          // eslint-disable-next-line max-len
-          controller: 'did:key:z6Mki68HpLhwaUZub3dqbmGCiMm9GfjzX9pBiK8hvezxuCix',
-          expires: '2022-12-17T01:42:39Z',
-          allowedAction: [
-            'write'
-          ],
-          proof: {
-            type: 'Ed25519Signature2020',
-            created: '2021-12-17T01:42:39Z',
-            // eslint-disable-next-line max-len
-            verificationMethod: DEFAULT_ROOT_VM,
-            proofPurpose: 'capabilityDelegation',
-            capabilityChain: [
-              'urn:zcap:root:' + encodeURIComponent(url)
-            ],
-            // eslint-disable-next-line max-len
-            proofValue: 'z5S7BnH5S9sbLDsdR8iza2KeXrQRYKgocsmeEAz7E2dhdxcuyk3hWvZn64EkT7JjqtzSDt4QUezCkHkGKR2sEPiea'
-          }
-        };
+        const invocationSigner = await getInvocationSigner({seed: ADMIN_SEED});
         const zcapClient = new ZcapClient({
           agent,
           SuiteClass: Ed25519Signature2020,
@@ -527,7 +389,120 @@ describe('ezcap-express', () => {
         let err;
         let res;
         try {
-          res = await zcapClient.write({url, json: capability});
+          const url = `${serviceObjectId}/revocations/` +
+            `${encodeURIComponent(rootCapability.id)}`;
+          res = await zcapClient.write({url, json: rootCapability});
+        } catch(e) {
+          err = e;
+        }
+        should.not.exist(res);
+        should.exist(err);
+        err.data.name.should.equal('NotAllowedError');
+        err.data.message.should.equal('A root capability cannot be revoked.');
+      });
+      it('throws error if capability is invalid', async () => {
+        // delegate zcap to access a service object from admin to delegate
+        const serviceObjectId = `${BASE_URL}/service-objects/123`;
+        const delegatedZcap = await delegate({
+          seed: ADMIN_SEED,
+          rootInvocationTarget: serviceObjectId,
+          controller: DELEGATE_ID
+        });
+
+        // make delegated zcap invalid by deleting its `proof`
+        delete delegatedZcap.proof;
+
+        // revoke zcap
+        const invocationSigner = await getInvocationSigner(
+          {seed: DELEGATE_SEED});
+        const zcapClient = new ZcapClient({
+          agent,
+          SuiteClass: Ed25519Signature2020,
+          invocationSigner
+        });
+        let err;
+        let res;
+        try {
+          const url = `${serviceObjectId}/revocations/` +
+            `${encodeURIComponent(delegatedZcap.id)}`;
+          res = await zcapClient.write({url, json: delegatedZcap});
+        } catch(e) {
+          err = e;
+        }
+        should.not.exist(res);
+        should.exist(err);
+        err.data.name.should.equal('DataError');
+        err.data.message.should.equal(
+          'The provided capability delegation is invalid.');
+      });
+      it('throws error if not authorized to use root capability for ' +
+        'service object', async () => {
+        // delegate zcap to access a service object from admin to delegate
+        const serviceObjectId = `${BASE_URL}/service-objects/123`;
+        const delegatedZcap = await delegate({
+          seed: ADMIN_SEED,
+          rootInvocationTarget: serviceObjectId,
+          controller: DELEGATE_ID
+        });
+
+        // try to revoke zcap using root zcap for service object
+        const rootCapability = createRootCapability({
+          controller: ROOT_CONTROLLER,
+          invocationTarget: serviceObjectId
+        });
+        const invocationSigner = await getInvocationSigner(
+          {seed: DELEGATE_SEED});
+        const zcapClient = new ZcapClient({
+          agent,
+          SuiteClass: Ed25519Signature2020,
+          invocationSigner
+        });
+        let err;
+        let res;
+        try {
+          const url = `${serviceObjectId}/revocations/` +
+            `${encodeURIComponent(delegatedZcap.id)}`;
+          res = await zcapClient.write({
+            url, capability: rootCapability, json: delegatedZcap
+          });
+        } catch(e) {
+          err = e;
+        }
+        should.not.exist(res);
+        should.exist(err);
+        err.status.should.equal(403);
+        err.message.should.equal('Forbidden');
+      });
+      it('should succeed if authorized to use root capability for ' +
+        'service object', async () => {
+        // delegate zcap to access a service object from admin to delegate
+        const serviceObjectId = `${BASE_URL}/service-objects/123`;
+        const delegatedZcap = await delegate({
+          seed: ADMIN_SEED,
+          rootInvocationTarget: serviceObjectId,
+          controller: DELEGATE_ID
+        });
+
+        // try to revoke zcap using root zcap for service object
+        const rootCapability = createRootCapability({
+          controller: ROOT_CONTROLLER,
+          invocationTarget: serviceObjectId
+        });
+        const invocationSigner = await getInvocationSigner(
+          {seed: ADMIN_SEED});
+        const zcapClient = new ZcapClient({
+          agent,
+          SuiteClass: Ed25519Signature2020,
+          invocationSigner
+        });
+        let err;
+        let res;
+        try {
+          const url = `${serviceObjectId}/revocations/` +
+            `${encodeURIComponent(delegatedZcap.id)}`;
+          res = await zcapClient.write({
+            url, capability: rootCapability.id, json: delegatedZcap
+          });
         } catch(e) {
           err = e;
         }
