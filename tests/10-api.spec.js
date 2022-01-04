@@ -2,6 +2,7 @@
  * Copyright (c) 2021-2022 Digital Bazaar, Inc. All rights reserved.
  */
 import {authorizeZcapInvocation, authorizeZcapRevocation} from '../lib';
+import {createRootCapability} from '@digitalbazaar/zcapld';
 import ed25519 from 'ed25519-signature-2020-context';
 import {Ed25519Signature2020} from '@digitalbazaar/ed25519-signature-2020';
 import express from 'express';
@@ -24,6 +25,11 @@ const BASE_URL = `https://localhost:${TEST_SERVER_PORT}`;
 
 const key = fs.readFileSync(__dirname + '/key.pem');
 const cert = fs.readFileSync(__dirname + '/cert.pem');
+
+const DEFAULT_ROOT_CONTROLLER =
+  'did:key:z6Mkfeco2NSEPeFV3DkjNSabaCza1EoS3CmqLb1eJ5BriiaR';
+const DEFAULT_ROOT_VM =
+  `${DEFAULT_ROOT_CONTROLLER}#${DEFAULT_ROOT_CONTROLLER.substring(8)}`;
 
 const agent = new https.Agent({
   rejectUnauthorized: false
@@ -62,7 +68,7 @@ app.post('/documents',
     },
     getRootController() {
       // root controller(Admin DID)
-      return 'did:key:z6Mkfeco2NSEPeFV3DkjNSabaCza1EoS3CmqLb1eJ5BriiaR';
+      return DEFAULT_ROOT_CONTROLLER;
     },
     expectedHost: 'localhost:5000',
     onError: _logError
@@ -77,7 +83,7 @@ app.get('/test/:id',
     documentLoader,
     getRootController() {
       // root controller(Admin DID)
-      return 'did:key:z6Mkfeco2NSEPeFV3DkjNSabaCza1EoS3CmqLb1eJ5BriiaR';
+      return DEFAULT_ROOT_CONTROLLER;
     },
     getExpectedTarget({req}) {
       const expectedTarget =
@@ -101,7 +107,7 @@ app.post('/revocations/:id',
     },
     getRootController() {
       // root controller(Admin DID)
-      return 'did:key:z6Mkfeco2NSEPeFV3DkjNSabaCza1EoS3CmqLb1eJ5BriiaR';
+      return DEFAULT_ROOT_CONTROLLER;
     },
     getExpectedTarget({req}) {
       return {
@@ -129,7 +135,7 @@ app.post('/revocations',
     },
     getRootController() {
       // root controller(Admin DID)
-      return 'did:key:z6Mkfeco2NSEPeFV3DkjNSabaCza1EoS3CmqLb1eJ5BriiaR';
+      return DEFAULT_ROOT_CONTROLLER;
     },
     getExpectedTarget() {
       return {
@@ -381,7 +387,7 @@ describe('ezcap-express', () => {
             type: 'Ed25519Signature2020',
             created: '2021-12-16T22:03:14Z',
             // eslint-disable-next-line max-len
-            verificationMethod: 'did:key:z6Mkfeco2NSEPeFV3DkjNSabaCza1EoS3CmqLb1eJ5BriiaR#z6Mkfeco2NSEPeFV3DkjNSabaCza1EoS3CmqLb1eJ5BriiaR',
+            verificationMethod: DEFAULT_ROOT_VM,
             proofPurpose: 'capabilityDelegation',
             capabilityChain: [
               'urn:zcap:root:' + encodeURIComponent(url)
@@ -414,14 +420,10 @@ describe('ezcap-express', () => {
           const bobSeed = 'z1AnZce3gUvSfVbsbqpgH9LNtmBuve4zQdYwdpEp22YQzB4';
           const invocationSigner = await getInvocationSigner({seed: bobSeed});
 
-          const rootCapability = {
-            '@context': [
-              zcapCtx.CONTEXT_URL,
-              ed25519.CONTEXT_URL
-            ],
-            id: 'urn:zcap:root:zWH71D96BNXEZtKoL3i1oPx',
-          };
-          'urn:zcap:root:' + encodeURIComponent(url);
+          const rootCapability = createRootCapability({
+            controller: DEFAULT_ROOT_CONTROLLER,
+            invocationTarget: url
+          });
           const zcapClient = new ZcapClient({
             agent,
             SuiteClass: Ed25519Signature2020,
@@ -508,7 +510,7 @@ describe('ezcap-express', () => {
             type: 'Ed25519Signature2020',
             created: '2021-12-17T01:42:39Z',
             // eslint-disable-next-line max-len
-            verificationMethod: 'did:key:z6Mkfeco2NSEPeFV3DkjNSabaCza1EoS3CmqLb1eJ5BriiaR#z6Mkfeco2NSEPeFV3DkjNSabaCza1EoS3CmqLb1eJ5BriiaR',
+            verificationMethod: DEFAULT_ROOT_VM,
             proofPurpose: 'capabilityDelegation',
             capabilityChain: [
               'urn:zcap:root:' + encodeURIComponent(url)
