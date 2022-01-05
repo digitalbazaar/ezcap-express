@@ -7,6 +7,13 @@
   `maxTimestampDelta` to allow for more fine grained control. These parameters
   all have defaults in zcapld that could previously not be set to other
   values at this layer.
+- **BREAKING**: Add required `getVerifier` async function parameter. The
+  function will be passed `{keyId, documentLoader}` to verify an HTTP signature
+  and must return `{verifier, verificationMethod}`. The `verifier` object must
+  have a `verify` function that takes `{data, signature}` and returns a
+  boolean indicating whether the `Uint8Array` `signature` is verified
+  against the `Uint8Array` `data` -- or throws an error if there is a reason
+  the cryptographic signature verification check cannot be run.
 
 ### Changed
 - **BREAKING**: Replace broken-out expected value parameters (e.g.,
