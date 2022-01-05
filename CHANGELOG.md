@@ -39,6 +39,9 @@
   zcap with an invocation target that is prefixed with `<serviceObjectId>`.
   The middleware will use the `expectedHost` value to construct the absolute
   URL.
+- **BREAKING**: Require `suiteFactory` parameter, no default cryptosuites are
+  included with this package to ensure it is decoupled from particular
+  cryptosuites.
 
 ### Fixed
 - **BREAKING**: HTTP status error codes have been fixed so that client errors

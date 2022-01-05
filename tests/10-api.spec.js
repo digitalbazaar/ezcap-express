@@ -88,7 +88,10 @@ app.post('/documents',
       return ROOT_CONTROLLER;
     },
     getVerifier,
-    onError: _logError
+    onError: _logError,
+    suiteFactory() {
+      return new Ed25519Signature2020();
+    }
   }),
   // eslint-disable-next-line no-unused-vars
   (req, res, next) => {
@@ -110,7 +113,10 @@ app.get('/test/:id',
       return ROOT_CONTROLLER;
     },
     getVerifier,
-    onError: _logError
+    onError: _logError,
+    suiteFactory() {
+      return new Ed25519Signature2020();
+    }
   }),
   // eslint-disable-next-line no-unused-vars
   (req, res, next) => {
