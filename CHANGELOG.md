@@ -17,6 +17,21 @@
   function signatures -- also allowing callers to decide how they want
   to provide this information (e.g., by calling individual functions from
   within `getExpectedValues` or whatever else).
+- **BREAKING**: The `authorizeZcapRevocation` middleware may now only be used
+  on routes ending in `/revocations/:revocationId`. The API params have also
+  changed as the only expected value that is needed from the user is
+  `expectedHost`. The rest of the expected values are hard coded according to
+  a conventional pattern for supporting revocation of any zcaps delegated from
+  a root capability for a service object. The service object's root capability
+  MUST have an invocation target that matches the service object's URL (aka its
+  "ID", `<serviceObjectId>`). So for the absolute URL:
+
+  `<serviceObjectId>/revocations/:revocationId`
+
+  A zcap can only be revoked using the middleware if its chain has a root
+  zcap with an invocation target that is prefixed with `<serviceObjectId>`.
+  The middleware will use the `expectedHost` value to construct the absolute
+  URL.
 
 ### Fixed
 - **BREAKING**: HTTP status error codes have been fixed so that client errors
