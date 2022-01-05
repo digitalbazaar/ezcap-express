@@ -3,7 +3,10 @@
  */
 import {authorizeZcapInvocation, authorizeZcapRevocation} from '../lib';
 import {createRootCapability} from '@digitalbazaar/zcapld';
+import {CryptoLD} from 'crypto-ld';
 import {Ed25519Signature2020} from '@digitalbazaar/ed25519-signature-2020';
+import {Ed25519VerificationKey2020} from
+  '@digitalbazaar/ed25519-verification-key-2020';
 import express from 'express';
 import {ZcapClient} from '@digitalbazaar/ezcap';
 import {delegate, getInvocationSigner} from './helpers';
@@ -57,6 +60,16 @@ if(DEBUG) {
   };
 }
 
+const cryptoLd = new CryptoLD();
+cryptoLd.use(Ed25519VerificationKey2020);
+async function getVerifier({keyId, documentLoader}) {
+  const key = await cryptoLd.fromKeyId({id: keyId, documentLoader});
+  const verificationMethod = await key.export(
+    {publicKey: true, includeContext: true});
+  const verifier = key.verifier();
+  return {verifier, verificationMethod};
+}
+
 const app = express();
 app.use(express.json());
 
@@ -74,6 +87,7 @@ app.post('/documents',
       // root controller(Admin DID)
       return ROOT_CONTROLLER;
     },
+    getVerifier,
     onError: _logError
   }),
   // eslint-disable-next-line no-unused-vars
@@ -95,6 +109,7 @@ app.get('/test/:id',
       // root controller(Admin DID)
       return ROOT_CONTROLLER;
     },
+    getVerifier,
     onError: _logError
   }),
   // eslint-disable-next-line no-unused-vars
@@ -114,6 +129,7 @@ app.post('/service-objects/:localId/revocations/:revocationId',
       // checking previously revoked zcaps is not part of the tests
       return {valid: true};
     },
+    getVerifier,
     onError: _logError,
     suiteFactory() {
       return new Ed25519Signature2020();
