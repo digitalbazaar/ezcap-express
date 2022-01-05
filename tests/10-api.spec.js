@@ -102,25 +102,10 @@ app.get('/test/:id',
     res.json({message: 'Get request was successful.'});
   });
 
-app.post('/service-objects/:localId/revocations/:zcapId',
+app.post('/service-objects/:localId/revocations/:revocationId',
   authorizeZcapRevocation({
     documentLoader,
-    getExpectedValues({req}) {
-      const {localId, zcapId} = req.params;
-      const serviceObjectBaseUrl =
-        `${BASE_URL}/service-objects/${encodeURIComponent(localId)}`;
-      return {
-        host: 'localhost:5000',
-        rootInvocationTarget: [
-          // allow root zcap for the service object itself so that the
-          // authority to submit any zcap for revocation can be delegated
-          serviceObjectBaseUrl,
-          // allow root zcap for revoking a specific zcap by any controller
-          // in its chain
-          `${serviceObjectBaseUrl}/revocations/${encodeURIComponent(zcapId)}`
-        ]
-      };
-    },
+    expectedHost: 'localhost:5000',
     getRootController() {
       // root controller(Admin DID)
       return ROOT_CONTROLLER;
@@ -136,9 +121,9 @@ app.post('/service-objects/:localId/revocations/:zcapId',
   }),
   // eslint-disable-next-line no-unused-vars
   (req, res, next) => {
-    const {zcapId} = req.params;
-    if(!zcapId.includes(':')) {
-      return next(new Error('zCap ID must be an absolute URI.'));
+    const {revocationId} = req.params;
+    if(!revocationId.includes(':')) {
+      return next(new Error('Revocation ID must be an absolute URI.'));
     }
     res.json({message: 'Revocation was successful.'});
   });
