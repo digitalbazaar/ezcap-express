@@ -40,6 +40,7 @@
 ### Remove
 - **BREAKING**: Remove `getExpectedRootCapabilityId` as there have been no
   use cases that have needed it.
+- **BREAKING**: Remove deprecated `suite` param, use `suiteFactory` instead.
 
 ## 4.5.0 - 2021-12-17
 
