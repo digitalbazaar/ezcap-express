@@ -346,7 +346,7 @@ describe('ezcap-express', () => {
     });
   });
   describe('authorizeZcapRevocation', () => {
-    describe('/service-objects/:localId/revocations/:zcapId', () => {
+    describe('/service-objects/:localId/revocations/:revocationId', () => {
       it('should succeed if correct data is passed', async () => {
         // delegate zcap to access a service object from admin to delegate
         const serviceObjectId = `${BASE_URL}/service-objects/123`;
