@@ -14,6 +14,8 @@
   boolean indicating whether the `Uint8Array` `signature` is verified
   against the `Uint8Array` `data` -- or throws an error if there is a reason
   the cryptographic signature verification check cannot be run.
+- Include `capabilityChain` in `req.zcapRevocation` when using revocation
+  middleware. This property includes the entire dereferenced chain.
 
 ### Changed
 - **BREAKING**: Replace broken-out expected value parameters (e.g.,
