@@ -1,6 +1,6 @@
 # @digitalbazaar/ezcap-express Changelog
 
-## 5.0.0 - 2022-01-xx
+## 5.0.0 - 2022-01-11
 
 ### Added
 - Add optional parameters `maxChainLength`, `maxDelegationTtl`, and
