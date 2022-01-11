@@ -1,6 +1,6 @@
 {
   "name": "@digitalbazaar/ezcap-express",
-  "version": "5.0.0",
+  "version": "5.0.1-0",
   "main": "lib",
   "module": "main.js",
   "repository": {
