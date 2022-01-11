@@ -5,8 +5,8 @@
 ### Added
 - Add optional parameters `maxChainLength`, `maxDelegationTtl`, and
   `maxTimestampDelta` to allow for more fine grained control. These parameters
-  all have defaults in zcapld that could previously not be set to other
-  values at this layer.
+  all have defaults in `@digitalbazaar/zcap` that could previously not be set
+  to other values at this layer.
 - **BREAKING**: Add required `getVerifier` async function parameter. The
   function will be passed `{keyId, documentLoader}` to verify an HTTP signature
   and must return `{verifier, verificationMethod}`. The `verifier` object must

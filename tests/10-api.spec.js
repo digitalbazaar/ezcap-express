@@ -2,7 +2,7 @@
  * Copyright (c) 2021-2022 Digital Bazaar, Inc. All rights reserved.
  */
 import {authorizeZcapInvocation, authorizeZcapRevocation} from '../lib';
-import {createRootCapability} from '@digitalbazaar/zcapld';
+import {createRootCapability} from '@digitalbazaar/zcap';
 import {CryptoLD} from 'crypto-ld';
 import {Ed25519Signature2020} from '@digitalbazaar/ed25519-signature-2020';
 import {Ed25519VerificationKey2020} from
