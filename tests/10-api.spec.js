@@ -2,7 +2,10 @@
  * Copyright (c) 2021-2022 Digital Bazaar, Inc. All rights reserved.
  */
 import {authorizeZcapInvocation, authorizeZcapRevocation} from '../lib';
-import {createRootCapability} from '@digitalbazaar/zcap';
+import {
+  createRootCapability,
+  constants as zcapConstants
+} from '@digitalbazaar/zcap';
 import {CryptoLD} from 'crypto-ld';
 import {Ed25519Signature2020} from '@digitalbazaar/ed25519-signature-2020';
 import {Ed25519VerificationKey2020} from
@@ -14,11 +17,12 @@ import {httpClient, DEFAULT_HEADERS} from '@digitalbazaar/http-client';
 import fs from 'fs';
 import https from 'https';
 import {securityLoader} from '@digitalbazaar/security-document-loader';
-import {signCapabilityInvocation} from 'http-signature-zcap-invoke';
-import zcapCtx from 'zcap-context';
+import {signCapabilityInvocation} from
+  '@digitalbazaar/http-signature-zcap-invoke';
 
 const loader = securityLoader();
-loader.addStatic(zcapCtx.CONTEXT_URL, zcapCtx.CONTEXT);
+loader.addStatic(
+  zcapConstants.ZCAP_CONTEXT_URL, zcapConstants.ZCAP_CONTEXT);
 
 const documentLoader = loader.build();
 
