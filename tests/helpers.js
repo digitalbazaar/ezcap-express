@@ -2,7 +2,7 @@
  * Copyright (c) 2021-2022 Digital Bazaar, Inc. All rights reserved.
  */
 import * as didKey from '@digitalbazaar/did-method-key';
-import {createRootCapability} from '@digitalbazaar/zcapld';
+import {createRootCapability} from '@digitalbazaar/zcap';
 import {decodeSecretKeySeed} from 'bnid';
 import {Ed25519Signature2020} from '@digitalbazaar/ed25519-signature-2020';
 import {ZcapClient} from '@digitalbazaar/ezcap';
