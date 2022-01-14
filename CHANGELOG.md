@@ -1,5 +1,11 @@
 # @digitalbazaar/ezcap-express Changelog
 
+## 5.1.0 - 2022-01-xx
+
+### Added
+- Use zcap@7.1 and http-signature-zcap-verify@10.1 to include
+  `dereferencedChain` in verification results and `req.zcap`.
+
 ## 5.0.1 - 2022-01-11
 
 ### Changed
