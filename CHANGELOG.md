@@ -1,6 +1,6 @@
 # @digitalbazaar/ezcap-express Changelog
 
-## 5.1.0 - 2022-01-xx
+## 5.1.0 - 2022-01-14
 
 ### Added
 - Use zcap@7.1 and http-signature-zcap-verify@10.1 to include
