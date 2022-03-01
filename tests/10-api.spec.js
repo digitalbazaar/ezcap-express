@@ -127,7 +127,7 @@ app.get('/test/:id',
     res.json({message: 'Get request was successful.'});
   });
 
-app.post('/service-objects/:localId/revocations/:revocationId',
+app.post('/service-objects/:localId/zcaps/revocations/:revocationId',
   authorizeZcapRevocation({
     documentLoader,
     expectedHost: 'localhost:5000',
@@ -350,7 +350,7 @@ describe('ezcap-express', () => {
     });
   });
   describe('authorizeZcapRevocation', () => {
-    describe('/service-objects/:localId/revocations/:revocationId', () => {
+    describe('.../:localId/zcaps/revocations/:revocationId', () => {
       it('should succeed if correct data is passed', async () => {
         // delegate zcap to access a service object from admin to delegate
         const serviceObjectId = `${BASE_URL}/service-objects/123`;
@@ -371,7 +371,7 @@ describe('ezcap-express', () => {
         let err;
         let res;
         try {
-          const url = `${serviceObjectId}/revocations/` +
+          const url = `${serviceObjectId}/zcaps/revocations/` +
             `${encodeURIComponent(delegatedZcap.id)}`;
           res = await zcapClient.write({url, json: delegatedZcap});
         } catch(e) {
@@ -400,7 +400,7 @@ describe('ezcap-express', () => {
         let err;
         let res;
         try {
-          const url = `${serviceObjectId}/revocations/` +
+          const url = `${serviceObjectId}/zcaps/revocations/` +
             `${encodeURIComponent(rootCapability.id)}`;
           res = await zcapClient.write({url, json: rootCapability});
         } catch(e) {
@@ -434,7 +434,7 @@ describe('ezcap-express', () => {
         let err;
         let res;
         try {
-          const url = `${serviceObjectId}/revocations/` +
+          const url = `${serviceObjectId}/zcaps/revocations/` +
             `${encodeURIComponent(delegatedZcap.id)}`;
           res = await zcapClient.write({url, json: delegatedZcap});
         } catch(e) {
@@ -471,7 +471,7 @@ describe('ezcap-express', () => {
         let err;
         let res;
         try {
-          const url = `${serviceObjectId}/revocations/` +
+          const url = `${serviceObjectId}/zcaps/revocations/` +
             `${encodeURIComponent(delegatedZcap.id)}`;
           res = await zcapClient.write({
             url, capability: rootCapability, json: delegatedZcap
@@ -509,7 +509,7 @@ describe('ezcap-express', () => {
         let err;
         let res;
         try {
-          const url = `${serviceObjectId}/revocations/` +
+          const url = `${serviceObjectId}/zcaps/revocations/` +
             `${encodeURIComponent(delegatedZcap.id)}`;
           res = await zcapClient.write({
             url, capability: rootCapability.id, json: delegatedZcap

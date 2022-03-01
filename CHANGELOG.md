@@ -1,5 +1,11 @@
 # @digitalbazaar/ezcap-express Changelog
 
+## 6.0.0 - 2022-03-xx
+
+### Changed
+- **BREAKING**: Better future proof conventional zcap API endpoints by
+  prefixing `/revocations` middleware with `/zcaps`.
+
 ## 5.1.0 - 2022-01-14
 
 ### Added
