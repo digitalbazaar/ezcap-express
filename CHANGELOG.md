@@ -4,7 +4,7 @@
 
 ### Changed
 - **BREAKING**: Better future proof conventional zcap API endpoints by
-  prefixing `/revocations` middleware with `/zcaps`.
+  prefixing `/revocations` route with `/zcaps`.
 
 ## 5.1.0 - 2022-01-14
 
