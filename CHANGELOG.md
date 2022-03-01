@@ -1,6 +1,6 @@
 # @digitalbazaar/ezcap-express Changelog
 
-## 6.0.0 - 2022-03-xx
+## 6.0.0 - 2022-03-01
 
 ### Changed
 - **BREAKING**: Better future proof conventional zcap API endpoints by
