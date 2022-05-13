@@ -1,5 +1,13 @@
 # @digitalbazaar/ezcap-express Changelog
 
+## 6.2.0 - 2022-05-xx
+
+### Added
+- If a capability is being revoked, it is exposed via
+  `req.ezcap.capabilityToRevoke` to enable applications to implement smart
+  cache logic, inline with using the `invocationParameters` value for the
+  same purpose.
+
 ## 6.1.0 - 2022-05-13
 
 ### Added
