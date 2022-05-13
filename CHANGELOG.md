@@ -1,5 +1,19 @@
 # @digitalbazaar/ezcap-express Changelog
 
+## 6.1.0 - 2022-05-xx
+
+### Added
+- Provide access to `invocationParameters` on `req.ezcap`. These parameters
+  include the invoked capability, capability action, proof purpose, and proof
+  meta data. This information is set on `req.ezcap` just prior to validating
+  the proof purpose so it should not be considered trusted until after the
+  zcap invocation has been authorized. It can be useful, however, in helping
+  create more resilient systems that use caches, e.g., if the root controller
+  for the target object has been cached and could have changed, then the
+  invocation parameters could potentially be used to help can application
+  determine whether it should check for a more fresh root controller in
+  `getRootController`.
+
 ## 6.0.0 - 2022-03-01
 
 ### Changed
