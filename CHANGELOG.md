@@ -1,6 +1,6 @@
 # @digitalbazaar/ezcap-express Changelog
 
-## 6.2.0 - 2022-05-xx
+## 6.2.0 - 2022-05-13
 
 ### Added
 - If a capability is being revoked, it is exposed via
