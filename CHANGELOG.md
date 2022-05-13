@@ -1,6 +1,6 @@
 # @digitalbazaar/ezcap-express Changelog
 
-## 6.1.0 - 2022-05-xx
+## 6.1.0 - 2022-05-13
 
 ### Added
 - Provide access to `invocationParameters` on `req.ezcap`. These parameters
