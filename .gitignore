@@ -103,5 +103,9 @@ dist
 # TernJS port file
 .tern-port
 
+# Editor files
+*~
+*.sw[nop]
+
 # VSCode
 .vscode
