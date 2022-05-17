@@ -1,7 +1,9 @@
 /*!
  * Copyright (c) 2021-2022 Digital Bazaar, Inc. All rights reserved.
  */
-import {authorizeZcapInvocation, authorizeZcapRevocation} from '../lib';
+import {
+  authorizeZcapInvocation, authorizeZcapRevocation
+} from '../lib/index.js';
 import {
   createRootCapability,
   constants as zcapConstants
@@ -12,13 +14,17 @@ import {Ed25519VerificationKey2020} from
   '@digitalbazaar/ed25519-verification-key-2020';
 import express from 'express';
 import {ZcapClient} from '@digitalbazaar/ezcap';
-import {delegate, getInvocationSigner} from './helpers';
+import {delegate, getInvocationSigner} from './helpers.js';
+import {fileURLToPath} from 'node:url';
 import {httpClient, DEFAULT_HEADERS} from '@digitalbazaar/http-client';
-import fs from 'fs';
-import https from 'https';
+import fs from 'node:fs';
+import https from 'node:https';
+import path from 'node:path';
 import {securityLoader} from '@digitalbazaar/security-document-loader';
 import {signCapabilityInvocation} from
   '@digitalbazaar/http-signature-zcap-invoke';
+
+const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
 const loader = securityLoader();
 loader.addStatic(
@@ -26,8 +32,11 @@ loader.addStatic(
 
 const documentLoader = loader.build();
 
-const TEST_SERVER_PORT = 5000;
-const BASE_URL = `https://localhost:${TEST_SERVER_PORT}`;
+// set in _startServer
+// host:port
+let BASE_HOST;
+// https://host:port
+let BASE_URL;
 
 const key = fs.readFileSync(__dirname + '/key.pem');
 const cert = fs.readFileSync(__dirname + '/cert.pem');
@@ -44,10 +53,12 @@ const DELEGATE_ID = 'did:key:z6Mki68HpLhwaUZub3dqbmGCiMm9GfjzX9pBiK8hvezxuCix';
 // HTTPS agent that ignores TLS errors as test server has invalid cert
 const agent = new https.Agent({rejectUnauthorized: false});
 
-function _startServer({app, port = TEST_SERVER_PORT}) {
+function _startServer({app}) {
   return new Promise(resolve => {
     const server = https.createServer({key, cert}, app);
-    server.listen(port, () => {
+    server.listen(0, () => {
+      BASE_HOST = `localhost:${server.address().port}`;
+      BASE_URL = `https://${BASE_HOST}`;
       console.log(`Test server listening at ${BASE_URL}`);
       return resolve(server);
     });
@@ -77,94 +88,97 @@ async function getVerifier({keyId, documentLoader}) {
 const app = express();
 app.use(express.json());
 
-// mount the test routes
-app.post('/documents',
-  authorizeZcapInvocation({
-    documentLoader,
-    getExpectedValues() {
-      return {
-        host: 'localhost:5000',
-        rootInvocationTarget: [`${BASE_URL}/documents`]
-      };
-    },
-    getRootController() {
-      // root controller(Admin DID)
-      return ROOT_CONTROLLER;
-    },
-    getVerifier,
-    onError: _logError,
-    suiteFactory() {
-      return new Ed25519Signature2020();
-    }
-  }),
-  // eslint-disable-next-line no-unused-vars
-  (req, res, next) => {
-    res.json({message: 'Post request was successful.'});
-  });
+async function _setupApp() {
+  // mount the test routes
+  app.post('/documents',
+    authorizeZcapInvocation({
+      documentLoader,
+      getExpectedValues() {
+        return {
+          host: BASE_HOST,
+          rootInvocationTarget: [`${BASE_URL}/documents`]
+        };
+      },
+      getRootController() {
+        // root controller(Admin DID)
+        return ROOT_CONTROLLER;
+      },
+      getVerifier,
+      onError: _logError,
+      suiteFactory() {
+        return new Ed25519Signature2020();
+      }
+    }),
+    // eslint-disable-next-line no-unused-vars
+    (req, res, next) => {
+      res.json({message: 'Post request was successful.'});
+    });
 
-// this route tests a broken `getExpectedValues` with a bad return value
-app.get('/test/:id',
-  authorizeZcapInvocation({
-    documentLoader,
-    getExpectedValues({req}) {
-      const rootInvocationTarget =
-        `${BASE_URL}/documents/${encodeURIComponent(req.params.id)}`;
-      // intentionally set return value to not be an object
-      return rootInvocationTarget;
-    },
-    getRootController() {
-      // root controller(Admin DID)
-      return ROOT_CONTROLLER;
-    },
-    getVerifier,
-    onError: _logError,
-    suiteFactory() {
-      return new Ed25519Signature2020();
-    }
-  }),
-  // eslint-disable-next-line no-unused-vars
-  (req, res, next) => {
-    res.json({message: 'Get request was successful.'});
-  });
+  // this route tests a broken `getExpectedValues` with a bad return value
+  app.get('/test/:id',
+    authorizeZcapInvocation({
+      documentLoader,
+      getExpectedValues({req}) {
+        const rootInvocationTarget =
+          `${BASE_URL}/documents/${encodeURIComponent(req.params.id)}`;
+        // intentionally set return value to not be an object
+        return rootInvocationTarget;
+      },
+      getRootController() {
+        // root controller(Admin DID)
+        return ROOT_CONTROLLER;
+      },
+      getVerifier,
+      onError: _logError,
+      suiteFactory() {
+        return new Ed25519Signature2020();
+      }
+    }),
+    // eslint-disable-next-line no-unused-vars
+    (req, res, next) => {
+      res.json({message: 'Get request was successful.'});
+    });
 
-app.post('/service-objects/:localId/zcaps/revocations/:revocationId',
-  authorizeZcapRevocation({
-    documentLoader,
-    expectedHost: 'localhost:5000',
-    getRootController() {
-      // root controller(Admin DID)
-      return ROOT_CONTROLLER;
-    },
-    inspectCapabilityChain() {
-      // checking previously revoked zcaps is not part of the tests
-      return {valid: true};
-    },
-    getVerifier,
-    onError: _logError,
-    suiteFactory() {
-      return new Ed25519Signature2020();
-    }
-  }),
+  app.post('/service-objects/:localId/zcaps/revocations/:revocationId',
+    authorizeZcapRevocation({
+      documentLoader,
+      expectedHost: BASE_HOST,
+      getRootController() {
+        // root controller(Admin DID)
+        return ROOT_CONTROLLER;
+      },
+      inspectCapabilityChain() {
+        // checking previously revoked zcaps is not part of the tests
+        return {valid: true};
+      },
+      getVerifier,
+      onError: _logError,
+      suiteFactory() {
+        return new Ed25519Signature2020();
+      }
+    }),
+    // eslint-disable-next-line no-unused-vars
+    (req, res, next) => {
+      const {revocationId} = req.params;
+      if(!revocationId.includes(':')) {
+        return next(new Error('Revocation ID must be an absolute URI.'));
+      }
+      res.json({message: 'Revocation was successful.'});
+    });
   // eslint-disable-next-line no-unused-vars
-  (req, res, next) => {
-    const {revocationId} = req.params;
-    if(!revocationId.includes(':')) {
-      return next(new Error('Revocation ID must be an absolute URI.'));
+  app.use(function(err, req, res, next) {
+    if(res.statusCode < 400) {
+      // default to 500 error code
+      res.status(500);
     }
-    res.json({message: 'Revocation was successful.'});
+    res.send({message: err.message, name: err.name});
   });
-// eslint-disable-next-line no-unused-vars
-app.use(function(err, req, res, next) {
-  if(res.statusCode < 400) {
-    // default to 500 error code
-    res.status(500);
-  }
-  res.send({message: err.message, name: err.name});
-});
+}
 
 let server;
 before(async () => {
   server = await _startServer({app});
+  await _setupApp(server);
 });
 
 after(async () => {
@@ -233,7 +247,7 @@ describe('ezcap-express', () => {
       should.not.exist(res);
       should.exist(err);
       err.status.should.equal(403);
-      err.message.should.equal('Forbidden');
+      err.message.should.include('Forbidden');
     });
     it('should throw error if digest header is not present when http body is ' +
       'present', async () => {
@@ -377,9 +391,9 @@ describe('ezcap-express', () => {
         } catch(e) {
           err = e;
         }
+        should.not.exist(err);
         should.exist(res);
         res.status.should.equal(200);
-        should.not.exist(err);
         res.data.message.should.equal('Revocation was successful.');
       });
       it('throws error if capability id starts with ' +
@@ -517,9 +531,9 @@ describe('ezcap-express', () => {
         } catch(e) {
           err = e;
         }
+        should.not.exist(err);
         should.exist(res);
         res.status.should.equal(200);
-        should.not.exist(err);
         res.data.message.should.equal('Revocation was successful.');
       });
     });
