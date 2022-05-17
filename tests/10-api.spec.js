@@ -496,7 +496,7 @@ describe('ezcap-express', () => {
         should.not.exist(res);
         should.exist(err);
         err.status.should.equal(403);
-        err.message.should.equal('Forbidden');
+        err.message.should.include('Forbidden');
       });
       it('should succeed if authorized to use root capability for ' +
         'service object', async () => {
