@@ -19,7 +19,7 @@ for express.js HTTP servers and more.
 
 ## Background
 
-This library provides node.js express middleware that can be used to protect
+This library provides Node.js express middleware that can be used to protect
 resources on HTTP servers using Authorization Capabilities (zcaps). The library
 is configured with secure and sensible defaults to help developers get started
 quickly and ensure that their server code is production-ready.
@@ -37,7 +37,16 @@ preferably via parties other than the implementer.
 
 ## Install
 
-- Node.js 14+ is required.
+- Node.js 14+ is supported.
+- [Web Crypto API][] is required by dependencies. Node.js 14 must use a polyfill.
+
+To install from NPM:
+
+```
+npm install @digitalbazaar/ezcap-express
+```
+
+To install development code:
 
 ```sh
 git clone git@github.com:digitalbazaar/ezcap-express.git
@@ -116,7 +125,7 @@ async function documentLoader(url) {
 ### Define authorizeMyZcapInvocation
 
 ```js
-const {authorizeZcapInvocation} = require('ezcap-express');
+import {authorizeZcapInvocation} from '@digitalbazaar/ezcap-express';
 
 async function authorizeMyZcapInvocation({expectedAction} = {}) {
   return authorizeZcapInvocation({
@@ -201,24 +210,229 @@ very simple code.
 These are the two assumptions that ezcap makes and with those two assumptions,
 80% of all use cases we've encountered are covered.
 
+## Functions
+
+<dl>
+<dt><a href="#authorizeZcapInvocation">authorizeZcapInvocation(options)</a> ⇒ <code>function</code></dt>
+<dd><p>Authorizes an incoming request.</p>
+</dd>
+<dt><a href="#authorizeZcapRevocation">authorizeZcapRevocation(options)</a> ⇒ <code>function</code></dt>
+<dd><p>Authorizes a request to submit a zcap revocation.</p>
+<p>This middleware is opinionated; it MUST be attached to an endpoint that
+terminates in <code>/zcaps/revocations/:revocationId</code>. This to enable the
+middleware to automatically generate expected values for running zcap checks
+and to support a common, conventional revocation API pattern.</p>
+<p>The pattern is in support of controlled objects on a service, aka
+&quot;service objects&quot;. Each object&#39;s controller is used to populate the root
+zcap for the object&#39;s controller field. This root zcap has an invocation
+target that matches the URL for the service object, aka its
+&quot;serviceObjectId&quot;.</p>
+<p>Therefore, any route that matches an invocation target for a root zcap for
+a service SHOULD attach this middleware to:</p>
+<p><code>&lt;serviceObjectId&gt;/zcaps/revocations/:revocationId</code>.</p>
+<p>This middleware will compute <code>serviceObjectId</code> by combining the expected
+host with the subpath from the request URL that occurs before
+<code>/zcaps/revocations/</code>. It assumes that the request URL will have this
+pattern if the middleware code has been reached. IOW, <code>serviceObjectId</code> will
+be set using:</p>
+<p><code>https://&lt;expectedHost&gt;/&lt;URL subpath before &quot;/zcaps/revocations/&quot;&gt;</code>.</p>
+<p>Note: This middleware does NOT support having <code>/zcaps/revocations/</code> appear
+multiple places in the request URL.</p>
+<p>Attaching this middleware will enable any zcaps delegated from the service
+object&#39;s root zcap to be revoked without having to issue an additional zcap
+to use the revocation endpoint. This middleware makes that possible by
+supporting the invocation of a dynamically generated root zcap with an
+invocation target of:</p>
+<p><code>&lt;serviceObjectId&gt;/zcaps/revocations/:revocationId</code>.</p>
+<p>This middleware will set the <code>controller</code> of this root zcap to all
+controllers in the to-be-revoked zcap&#39;s delegation chain, permitting any
+participant to revoke it. An error will be thrown prior to populating this
+<code>controller</code> field if the root zcap in the to-be-revoked zcap&#39;s chain does
+not have <code>&lt;serviceObjectId&gt;</code> as its invocation target (or a prefix of it).
+This ensures that the only zcaps that have been delegated from a root zcap
+using the service object&#39;s ID as part of its invocation target can be
+revoked at its <code>/zcaps/revocations</code> route, i.e., other zcaps intended for
+other service objects -- or entirely other services -- cannot be revoked via
+this middleware.</p>
+<p>This middleware will automatically generate two sets of expects values: one
+for checking the invocation to revoke a capability and one for verifying the
+delegation chain of the capability that is to be revoked. Only the expected
+host value can and must be given as a parameter.</p>
+<p>The expected values for checking the capability invocation will be:</p>
+<p>host: <code>&lt;expectedHost&gt;</code>,
+rootInvocationTarget: [
+  // root zcap with this target, RZ1, can be delegated w/target attenuation
+  // to allow delegates to revoke any zcap, Z1, with RZ1 as the root in its
+  // chain, even if the delegate is not a controller in Z1&#39;s chain
+  <code>&lt;serviceObjectId&gt;</code>,
+  // root zcap that this target, RZ2, can be used to revoke a zcap, Z2,
+  // with an &quot;id&quot; of <code>revocationId</code>; RZ2&#39;s controller will be populated
+  // using all controllers from Z2&#39;s chain, enabling any controller in that
+  // zcap&#39;s chain to invoke RZ2 to revoke Z2
+  <code>&lt;serviceObjectId&gt;/zcaps/revocations/&lt;revocationId&gt;</code>,
+],
+action: &#39;write&#39;
+.</p>
+</dd>
+</dl>
+
+## Typedefs
+
+<dl>
+<dt><a href="#GetExpectedValues">GetExpectedValues</a></dt>
+<dd></dd>
+<dt><a href="#GetExpectedValues">GetExpectedValues</a> ⇒ <code><a href="#ExpectedValues">ExpectedValues</a></code></dt>
+<dd><p>A function for returning expected values when checking a zcap invocation.</p>
+</dd>
+<dt><a href="#ExpectedValues">ExpectedValues</a> : <code>object</code></dt>
+<dd><p>The expected values for checking a zcap invocation performed via an HTTP
+request.</p>
+</dd>
+</dl>
+
 <a name="authorizeZcapInvocation"></a>
 
 ## authorizeZcapInvocation(options) ⇒ <code>function</code>
 Authorizes an incoming request.
 
-**Kind**: global function
-**Returns**: <code>function</code> - Returns an Express.js middleware route handler.
+**Kind**: global function  
+**Returns**: <code>function</code> - Returns an Express.js style middleware route handler.  
+
+| Param | Type | Default | Description |
+| --- | --- | --- | --- |
+| options | <code>object</code> |  | Options hashmap. |
+| [options.allowTargetAttenuation] | <code>boolean</code> | <code>true</code> | Allow the   invocationTarget of a delegation chain to be increasingly restrictive   based on a hierarchical RESTful URL structure. |
+| options.documentLoader | <code>object</code> |  | Document loader used to load   DID Documents, capability documents, and JSON-LD Contexts. |
+| options.getExpectedValues | [<code>GetExpectedValues</code>](#GetExpectedValues) |  | Used to get the   expected values when checking the zcap invocation. |
+| options.getRootController | <code>function</code> |  | Used to get the controller   of the root capability in the invoked capability's chain. |
+| options.getVerifier | <code>function</code> |  | An async function to   call to get a verifier and verification method for the key ID. |
+| [options.inspectCapabilityChain] | <code>function</code> |  | A function that can   inspect a capability chain, e.g., to check for revocations. |
+| [options.maxChainLength] | <code>number</code> | <code>10</code> | The maximum length of the   capability delegation chain. |
+| [options.maxClockSkew] | <code>number</code> | <code>300</code> | A maximum number of seconds   that clocks may be skewed when checking capability expiration date-times   against `date`, when comparing invocation proof creation time against   delegation proof creation time, and when comparing the capability   invocation expiration time against `now`. |
+| [options.maxDelegationTtl] | <code>number</code> | <code>1000*60*60*24*90</code> | The maximum   milliseconds to live for a delegated zcap as measured by the time   difference between `expires` and `created` on the delegation proof. |
+| [options.onError] | <code>function</code> |  | An error handler handler for   customizable error handling. |
+| options.suiteFactory | <code>object</code> |  | A factory for creating the   supported suite(s) to use when verifying zcap delegation chains; this is   different from `getVerifier` which is used to produce a verifier for   verifying HTTP signatures used to invoke zcaps. |
+
+<a name="authorizeZcapRevocation"></a>
+
+## authorizeZcapRevocation(options) ⇒ <code>function</code>
+Authorizes a request to submit a zcap revocation.
+
+This middleware is opinionated; it MUST be attached to an endpoint that
+terminates in `/zcaps/revocations/:revocationId`. This to enable the
+middleware to automatically generate expected values for running zcap checks
+and to support a common, conventional revocation API pattern.
+
+The pattern is in support of controlled objects on a service, aka
+"service objects". Each object's controller is used to populate the root
+zcap for the object's controller field. This root zcap has an invocation
+target that matches the URL for the service object, aka its
+"serviceObjectId".
+
+Therefore, any route that matches an invocation target for a root zcap for
+a service SHOULD attach this middleware to:
+
+`<serviceObjectId>/zcaps/revocations/:revocationId`.
+
+This middleware will compute `serviceObjectId` by combining the expected
+host with the subpath from the request URL that occurs before
+`/zcaps/revocations/`. It assumes that the request URL will have this
+pattern if the middleware code has been reached. IOW, `serviceObjectId` will
+be set using:
+
+`https://<expectedHost>/<URL subpath before "/zcaps/revocations/">`.
+
+Note: This middleware does NOT support having `/zcaps/revocations/` appear
+multiple places in the request URL.
+
+Attaching this middleware will enable any zcaps delegated from the service
+object's root zcap to be revoked without having to issue an additional zcap
+to use the revocation endpoint. This middleware makes that possible by
+supporting the invocation of a dynamically generated root zcap with an
+invocation target of:
+
+`<serviceObjectId>/zcaps/revocations/:revocationId`.
+
+This middleware will set the `controller` of this root zcap to all
+controllers in the to-be-revoked zcap's delegation chain, permitting any
+participant to revoke it. An error will be thrown prior to populating this
+`controller` field if the root zcap in the to-be-revoked zcap's chain does
+not have `<serviceObjectId>` as its invocation target (or a prefix of it).
+This ensures that the only zcaps that have been delegated from a root zcap
+using the service object's ID as part of its invocation target can be
+revoked at its `/zcaps/revocations` route, i.e., other zcaps intended for
+other service objects -- or entirely other services -- cannot be revoked via
+this middleware.
+
+This middleware will automatically generate two sets of expects values: one
+for checking the invocation to revoke a capability and one for verifying the
+delegation chain of the capability that is to be revoked. Only the expected
+host value can and must be given as a parameter.
+
+The expected values for checking the capability invocation will be:
+
+host: `<expectedHost>`,
+rootInvocationTarget: [
+  // root zcap with this target, RZ1, can be delegated w/target attenuation
+  // to allow delegates to revoke any zcap, Z1, with RZ1 as the root in its
+  // chain, even if the delegate is not a controller in Z1's chain
+  `<serviceObjectId>`,
+  // root zcap that this target, RZ2, can be used to revoke a zcap, Z2,
+  // with an "id" of `revocationId`; RZ2's controller will be populated
+  // using all controllers from Z2's chain, enabling any controller in that
+  // zcap's chain to invoke RZ2 to revoke Z2
+  `<serviceObjectId>/zcaps/revocations/<revocationId>`,
+],
+action: 'write'
+.
+
+**Kind**: global function  
+**Returns**: <code>function</code> - Returns an Express.js style middleware route handler.  
 
 | Param | Type | Description |
 | --- | --- | --- |
 | options | <code>object</code> | Options hashmap. |
 | options.documentLoader | <code>object</code> | Document loader used to load   DID Documents, capability documents, and JSON-LD Contexts. |
-| [options.expectedAction] | <code>string</code> | The expected action for the   invoked capability. |
-| options.expectedHost | <code>string</code> | The expected host for the invoked   capability. |
-| [options.expectedTarget] | <code>string</code> \| <code>Array.&lt;string&gt;</code> | The expected   target(s) for the invoked capability. |
-| options.getRootController | <code>function</code> | Used to get the root capability   controller for the given root capability ID. |
-| [options.logger] | <code>object</code> | The logger instance to use. |
-| [options.suite] | <code>object</code> | The expected cryptography suite to use when   verifying digital signatures. |
+| options.expectedHost | <code>string</code> | The expected host header value   when checking the zcap invocation. |
+| options.getRootController | <code>function</code> | Used to get the controller   of the root capability for the service object. |
+| options.getVerifier | <code>function</code> | An async function to   call to get a verifier and verification method for the key ID. |
+| [options.inspectCapabilityChain] | <code>function</code> | A function that can   inspect a capability chain, e.g., to check for revocations; it will be   used when verifying the invocation and the delegation chain for the   to-be-revoked capability. |
+| [options.onError] | <code>function</code> | An error handler handler for   customizable error handling. |
+| options.suiteFactory | <code>object</code> | A factory for creating the   supported suite(s) to use when verifying zcap delegation chains; this is   different from `getVerifier` which is used to produce a verifier for   verifying HTTP signatures used to invoke zcaps. |
+
+<a name="GetExpectedValues"></a>
+
+## GetExpectedValues
+**Kind**: global typedef  
+<a name="GetExpectedValues"></a>
+
+## GetExpectedValues ⇒ [<code>ExpectedValues</code>](#ExpectedValues)
+A function for returning expected values when checking a zcap invocation.
+
+**Kind**: global typedef  
+**Returns**: [<code>ExpectedValues</code>](#ExpectedValues) - - The expected values.  
+
+| Param | Type | Description |
+| --- | --- | --- |
+| options | <code>object</code> | The options passed to the function. |
+| options.req | <code>object</code> | The express request. |
+
+<a name="ExpectedValues"></a>
+
+## ExpectedValues : <code>object</code>
+The expected values for checking a zcap invocation performed via an HTTP
+request.
+
+**Kind**: global typedef  
+**Properties**
+
+| Name | Type | Description |
+| --- | --- | --- |
+| [action] | <code>string</code> | The expected capability action; if no action   is specified during an invocation check, then a default action will be   determined based on the HTTP method from the request -- which is only safe   provided that the handler code path is also determined based on the HTTP   method in the request (i.e., typical method-based express/connect   routing); if the handler code path is determined by some other means,   e.g., the request body, then `action` MUST be set. |
+| host | <code>string</code> | The expected host in the request header. |
+| rootInvocationTarget | <code>string</code> \| <code>Array</code> | The expected invocation   target for every acceptable root capability; each string must express an   absolute URI. |
+| [target] | <code>string</code> | The expected invocation target; if no target   is specified during an invocation check, then the target will default to   the absolute URL computed from the relative request URL and expected host   value. |
+
 
 ## Contribute
 
@@ -237,3 +451,5 @@ Digital Bazaar: support@digitalbazaar.com
 ## License
 
 [New BSD License (3-clause)](LICENSE) © Digital Bazaar
+
+[Web Crypto API]: https://developer.mozilla.org/en-US/docs/Web/API/Web_Crypto_API
