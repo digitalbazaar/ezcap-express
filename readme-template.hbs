@@ -65,19 +65,22 @@ npm install
 ### Define getRootController
 
 ```js
+// this will only be called if `rootInvocationTarget` matches
+// one of the expected root invocation targets specified
 async function getRootController({
   req, rootCapabilityId, rootInvocationTarget
 }) {
-  // get associated capability controller from database
+  // get controller for a service object from a database
   let controller;
   try {
-    const record = await database.getMyThingById({
+    const record = await database.getMyServiceObjectById({
+      // typically, root invocation target is a service object ID
       id: rootInvocationTarget
     });
     controller = record.controller;
   } catch(e) {
     if(e.type === 'NotFoundError') {
-      const url = req.protocol + '://' + req.get('host') + req.url;
+      const url = `${req.protocol}://${req.get('host')}${req.originalUrl}`;
       throw new Error(
         `Invalid capability identifier "${rootCapabilityId}" ` +
         `for URL "${url}".`);
@@ -85,6 +88,8 @@ async function getRootController({
     throw e;
   }
 
+  // return the service object's controller so it will be
+  // added to the root capability for the service object
   return controller;
 }
 ```
@@ -122,13 +127,20 @@ async function documentLoader(url) {
 ```js
 import {authorizeZcapInvocation} from '@digitalbazaar/ezcap-express';
 
-async function authorizeMyZcapInvocation({expectedTarget, expectedAction} = {}) {
+async function authorizeMyZcapInvocation({expectedAction} = {}) {
   return authorizeZcapInvocation({
-    expectedHost: 'ezcap.example',
-    getRootController,
-    documentLoader,
-    expectedTarget,
-    expectedAction,
+    getExpectedValues({req}) {
+      const expectedHost = 'ezcap.example';
+      const {localId} = req.params;
+      const serviceObjectId =
+        `https://${expectedHost}/${encodeURIComponent(localId)}`;
+      return {
+        action: expectedAction,
+        host: expectedHost,
+        rootInvocationTarget: serviceObjectId
+      };
+    },
+    getRootController
   });
 };
 ```
@@ -141,7 +153,7 @@ import asyncHandler from 'express-async-handler';
 
 const app = express();
 
-app.post('/foo',
+app.post('/my-objects/:localId',
   authorizeMyZcapInvocation(),
   asyncHandler(async (req, res) => {
     // your code goes here
