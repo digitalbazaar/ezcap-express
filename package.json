@@ -19,8 +19,8 @@
     "generate-readme": "jsdoc2md -t readme-template.hbs lib/*.js > README.md",
     "test": "npm run test-node",
     "test-node": "cross-env NODE_ENV=test mocha --preserve-symlinks -t 30000 -A -R ${REPORTER:-spec} --require tests/test-mocha.js tests/*.spec.js",
-    "coverage": "cross-env NODE_ENV=test c8 --reporter=lcov --reporter=text-summary --reporter=text npm test",
-    "coverage-ci": "cross-env NODE_ENV=test c8 --reporter=lcovonly --reporter=text-summary --reporter=text npm test",
+    "coverage": "cross-env NODE_ENV=test c8 run test-node",
+    "coverage-ci": "cross-env NODE_ENV=test c8 --reporter=lcovonly --reporter=text-summary --reporter=text npm run test-node",
     "coverage-report": "c8 report",
     "lint": "eslint ."
   },
@@ -57,5 +57,12 @@
   },
   "engines": {
     "node": ">=14"
+  },
+  "c8": {
+    "reporter": [
+      "lcov",
+      "text-summary",
+      "text"
+    ]
   }
 }
