@@ -5,6 +5,8 @@
 ### Changed
 - **BREAKING**: Convert to module (ESM).
 - **BREAKING**: Require Node.js >=14.
+- **BREAKING**: Dependencies require Web Crypto API. Node.js 14 users need to
+  install an appropriate polyfill.
 - Update dependencies.
 - Lint module.
 

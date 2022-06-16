@@ -19,7 +19,7 @@ for express.js HTTP servers and more.
 
 ## Background
 
-This library provides node.js express middleware that can be used to protect
+This library provides Node.js express middleware that can be used to protect
 resources on HTTP servers using Authorization Capabilities (zcaps). The library
 is configured with secure and sensible defaults to help developers get started
 quickly and ensure that their server code is production-ready.
@@ -37,7 +37,16 @@ preferably via parties other than the implementer.
 
 ## Install
 
-- Node.js 14+ is required.
+- Node.js 14+ is supported.
+- [Web Crypto API][] is required by dependencies. Node.js 14 must use a polyfill.
+
+To install from NPM:
+
+```
+npm install @digitalbazaar/ezcap-express
+```
+
+To install development code:
 
 ```sh
 git clone git@github.com:digitalbazaar/ezcap-express.git
@@ -111,7 +120,7 @@ async function documentLoader(url) {
 ### Define authorizeMyZcapInvocation
 
 ```js
-const {authorizeZcapInvocation} = require('ezcap-express');
+import {authorizeZcapInvocation} from '@digitalbazaar/ezcap-express';
 
 async function authorizeMyZcapInvocation({expectedTarget, expectedAction} = {}) {
   return authorizeZcapInvocation({
@@ -208,3 +217,5 @@ Digital Bazaar: support@digitalbazaar.com
 ## License
 
 [New BSD License (3-clause)](LICENSE) © Digital Bazaar
+
+[Web Crypto API]: https://developer.mozilla.org/en-US/docs/Web/API/Web_Crypto_API
