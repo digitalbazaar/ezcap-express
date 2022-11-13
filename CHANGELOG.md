@@ -1,9 +1,12 @@
 # @digitalbazaar/ezcap-express Changelog
 
-## 8.0.0 - 2022-11-dd
+## 7.1.0 - 2022-11-dd
 
 ### Changed
-- **BREAKING**: Use `@digitalbazaar/zcap@9` and `jsonld-signatures@11`.
+- Update dependencies:
+  - `@digitalbazaar/zcap@9`
+  - `jsonld-signatures@11`
+  - `@digitalbazaar/http-signature-zcap-verify@11.1`.
 
 ## 7.0.0 - 2022-06-16
 
