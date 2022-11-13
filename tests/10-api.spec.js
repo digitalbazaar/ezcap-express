@@ -8,21 +8,21 @@ import {
   createRootCapability,
   constants as zcapConstants
 } from '@digitalbazaar/zcap';
+import {DEFAULT_HEADERS, httpClient} from '@digitalbazaar/http-client';
+import {delegate, getInvocationSigner} from './helpers.js';
 import {CryptoLD} from 'crypto-ld';
 import {Ed25519Signature2020} from '@digitalbazaar/ed25519-signature-2020';
 import {Ed25519VerificationKey2020} from
   '@digitalbazaar/ed25519-verification-key-2020';
 import express from 'express';
-import {ZcapClient} from '@digitalbazaar/ezcap';
-import {delegate, getInvocationSigner} from './helpers.js';
 import {fileURLToPath} from 'node:url';
-import {httpClient, DEFAULT_HEADERS} from '@digitalbazaar/http-client';
 import fs from 'node:fs';
 import https from 'node:https';
 import path from 'node:path';
 import {securityLoader} from '@digitalbazaar/security-document-loader';
 import {signCapabilityInvocation} from
   '@digitalbazaar/http-signature-zcap-invoke';
+import {ZcapClient} from '@digitalbazaar/ezcap';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
