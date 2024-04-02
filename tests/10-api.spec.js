@@ -37,6 +37,7 @@ const documentLoader = loader.build();
 let BASE_HOST;
 // https://host:port
 let BASE_URL;
+const QUERY = '?foo=bar&s=03-20-2024%2000:00%20UTC';
 
 const key = fs.readFileSync(__dirname + '/key.pem');
 const cert = fs.readFileSync(__dirname + '/cert.pem');
@@ -96,7 +97,7 @@ async function _setupApp() {
       getExpectedValues() {
         return {
           host: BASE_HOST,
-          rootInvocationTarget: [`${BASE_URL}/documents`]
+          rootInvocationTarget: [`${BASE_URL}/documents`, `${BASE_URL}/documents${QUERY}`]
         };
       },
       getRootController() {
@@ -201,6 +202,28 @@ describe('ezcap-express', () => {
         res = await zcapClient.write({url, json: {name: 'test'}});
       } catch(e) {
         err = e;
+      }
+      should.exist(res);
+      should.not.exist(err);
+      res.status.should.equal(200);
+      res.data.message.should.equal('Post request was successful.');
+    });
+    it('should succeed when query params are used', async () => {
+      const url = `${BASE_URL}/documents?foo=bar&s=03-20-2024%2000:00%20UTC`;
+      const invocationSigner = await getInvocationSigner({seed: ADMIN_SEED});
+
+      const zcapClient = new ZcapClient({
+        agent,
+        SuiteClass: Ed25519Signature2020,
+        invocationSigner
+      });
+      let res;
+      let err;
+      try {
+        res = await zcapClient.write({url, json: {name: 'test'}});
+      } catch(e) {
+        err = e;
+        console.log(e)
       }
       should.exist(res);
       should.not.exist(err);
