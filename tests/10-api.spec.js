@@ -209,7 +209,7 @@ describe('ezcap-express', () => {
       res.data.message.should.equal('Post request was successful.');
     });
     it('should succeed when query params are used', async () => {
-      const url = `${BASE_URL}/documents?foo=bar&s=03-20-2024%2000:00%20UTC`;
+      const url = `${BASE_URL}/documents${QUERY}`;
       const invocationSigner = await getInvocationSigner({seed: ADMIN_SEED});
 
       const zcapClient = new ZcapClient({
