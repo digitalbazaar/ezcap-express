@@ -37,7 +37,6 @@ const documentLoader = loader.build();
 let BASE_HOST;
 // https://host:port
 let BASE_URL;
-const QUERY = '?foo=bar&s=03-20-2024%2000:00%20UTC';
 
 const key = fs.readFileSync(__dirname + '/key.pem');
 const cert = fs.readFileSync(__dirname + '/cert.pem');
@@ -97,7 +96,7 @@ async function _setupApp() {
       getExpectedValues() {
         return {
           host: BASE_HOST,
-          rootInvocationTarget: [`${BASE_URL}/documents`, `${BASE_URL}/documents${QUERY}`]
+          rootInvocationTarget: [`${BASE_URL}/documents`]
         };
       },
       getRootController() {
@@ -209,9 +208,14 @@ describe('ezcap-express', () => {
       res.data.message.should.equal('Post request was successful.');
     });
     it('should succeed when query params are used', async () => {
-      const url = `${BASE_URL}/documents${QUERY}`;
+      // Test allowing urls that do not have properly encoded characters such
+      // as colons since they are frequently used and accepted in applications
+      const url = `${BASE_URL}/documents?foo=bar&s=03-20-2024%2000:00%20UTC`;
       const invocationSigner = await getInvocationSigner({seed: ADMIN_SEED});
-
+      const rootCapability = createRootCapability({
+        controller: ROOT_CONTROLLER,
+        invocationTarget: `${BASE_URL}/documents`
+      });
       const zcapClient = new ZcapClient({
         agent,
         SuiteClass: Ed25519Signature2020,
@@ -220,7 +224,7 @@ describe('ezcap-express', () => {
       let res;
       let err;
       try {
-        res = await zcapClient.write({url, json: {name: 'test'}});
+        res = await zcapClient.write({url, capability: rootCapability, json: {name: 'test'}});
       } catch(e) {
         err = e;
         console.log(e)
