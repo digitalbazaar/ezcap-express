@@ -1,6 +1,7 @@
 /*!
- * Copyright (c) 2021-2022 Digital Bazaar, Inc. All rights reserved.
+ * Copyright (c) 2021-2025 Digital Bazaar, Inc. All rights reserved.
  */
+import * as Ed25519Multikey from '@digitalbazaar/ed25519-multikey';
 import {
   authorizeZcapInvocation, authorizeZcapRevocation
 } from '../lib/index.js';
@@ -9,11 +10,8 @@ import {
   constants as zcapConstants
 } from '@digitalbazaar/zcap';
 import {DEFAULT_HEADERS, httpClient} from '@digitalbazaar/http-client';
-import {delegate, getInvocationSigner} from './helpers.js';
-import {CryptoLD} from 'crypto-ld';
+import {delegate, didKeyDriver, getInvocationSigner} from './helpers.js';
 import {Ed25519Signature2020} from '@digitalbazaar/ed25519-signature-2020';
-import {Ed25519VerificationKey2020} from
-  '@digitalbazaar/ed25519-verification-key-2020';
 import express from 'express';
 import {fileURLToPath} from 'node:url';
 import fs from 'node:fs';
@@ -75,12 +73,9 @@ if(DEBUG) {
   };
 }
 
-const cryptoLd = new CryptoLD();
-cryptoLd.use(Ed25519VerificationKey2020);
-async function getVerifier({keyId, documentLoader}) {
-  const key = await cryptoLd.fromKeyId({id: keyId, documentLoader});
-  const verificationMethod = await key.export(
-    {publicKey: true, includeContext: true});
+async function getVerifier({keyId}) {
+  const verificationMethod = await didKeyDriver.get({url: keyId});
+  const key = await Ed25519Multikey.from(verificationMethod);
   const verifier = key.verifier();
   return {verifier, verificationMethod};
 }
@@ -224,10 +219,11 @@ describe('ezcap-express', () => {
       let res;
       let err;
       try {
-        res = await zcapClient.write({url, capability: rootCapability, json: {name: 'test'}});
+        res = await zcapClient.write({
+          url, capability: rootCapability, json: {name: 'test'}
+        });
       } catch(e) {
         err = e;
-        console.log(e)
       }
       should.exist(res);
       should.not.exist(err);
