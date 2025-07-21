@@ -31,14 +31,9 @@ jobs:
       uses: actions/setup-node@v4
       with:
         node-version: ${{ matrix.node-version }}
-    - run: |
-        npm install
-        cd test
-        npm install
+    - run: npm install
     - name: Run test with Node.js ${{ matrix.node-version }}
-      run: |
-        cd test
-        npm test
+      run: npm run test
   coverage:
     needs: [test-node]
     runs-on: ubuntu-latest
@@ -52,14 +47,9 @@ jobs:
       uses: actions/setup-node@v4
       with:
         node-version: ${{ matrix.node-version }}
-    - run: |
-        npm install
-        cd test
-        npm install
+    - run: npm install
     - name: Generate coverage report
-      run: |
-        cd test
-        npm run coverage-ci
+      run: npm run coverage-ci
     - name: Upload coverage to Codecov
       uses: codecov/codecov-action@v4
       with:
