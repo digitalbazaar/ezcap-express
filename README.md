@@ -1,6 +1,6 @@
 # ezcap express library (@digitalbazaar/ezcap-express)
 
-[![Node.js CI](https://github.com/digitalbazaar/ezcap-express/workflows/Node.js%20CI/badge.svg)](https://github.com/digitalbazaar/ezcap-express/actions?query=workflow%3A%22Node.js+CI%22)
+[![Build Status](https://img.shields.io/github/actions/workflow/status/digitalbazaar/ezcap-express/main.yaml)](https://github.com/digitalbazaar/ezcap-express/actions/workflows/main.yaml)
 
 > zcap's gettin' you down? Get on the Ezcap Express! Woot WOoot! 🚇🎉
 
