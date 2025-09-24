@@ -1,5 +1,14 @@
 # @digitalbazaar/ezcap-express Changelog
 
+## 7.2.0 - 2025-mm-dd
+
+### Changed
+- Update dependencies:
+  - `@digitalbazaar/http-signature-header@5.0.1`
+  - `@digitalbazaar/http-signature-zcap-verify@11.1.1`
+  - `@digitalbazaar/zcap@9.0.1`
+  - `jsonld-signatures@11.5`.
+
 ## 7.1.0 - 2022-11-13
 
 ### Changed

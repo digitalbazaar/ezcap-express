@@ -26,32 +26,32 @@
   },
   "dependencies": {
     "@digitalbazaar/http-digest-header": "^2.0.0",
-    "@digitalbazaar/http-signature-header": "^5.0.0",
-    "@digitalbazaar/http-signature-zcap-verify": "^11.1.0",
-    "@digitalbazaar/zcap": "^9.0.0",
+    "@digitalbazaar/http-signature-header": "^5.0.1",
+    "@digitalbazaar/http-signature-zcap-verify": "^11.1.1",
+    "@digitalbazaar/zcap": "^9.0.1",
     "assert-plus": "^1.0.0",
     "express-async-handler": "^1.2.0",
-    "jsonld-signatures": "^11.0.0"
+    "jsonld-signatures": "^11.5.0"
   },
   "devDependencies": {
-    "@digitalbazaar/did-method-key": "^5.2.0",
+    "@digitalbazaar/did-method-key": "^5.3.0",
     "@digitalbazaar/ed25519-multikey": "^1.3.1",
-    "@digitalbazaar/ed25519-signature-2020": "^5.0.0",
-    "@digitalbazaar/ezcap": "^4.0.0",
+    "@digitalbazaar/ed25519-signature-2020": "^5.4.0",
+    "@digitalbazaar/ezcap": "^4.1.0",
     "@digitalbazaar/http-client": "^4.2.0",
     "@digitalbazaar/http-signature-zcap-invoke": "^6.0.0",
-    "@digitalbazaar/security-document-loader": "^3.0.1",
+    "@digitalbazaar/security-document-loader": "^3.1.0",
     "bnid": "^3.0.0",
     "c8": "^10.1.3",
     "chai": "^4.5.0",
-    "cross-env": "^7.0.3",
-    "eslint": "^8.17.0",
+    "cross-env": "^10.0.0",
+    "eslint": "^8.57.1",
     "eslint-config-digitalbazaar": "^5.2.0",
     "eslint-plugin-jsdoc": "^51.4.1",
     "eslint-plugin-unicorn": "^56.0.1",
     "express": "^4.21.2",
     "jsdoc-to-markdown": "^9.1.2",
-    "mocha": "^11.7.1"
+    "mocha": "^11.7.2"
   },
   "engines": {
     "node": ">=20"
