@@ -23,7 +23,6 @@ jobs:
     - name: Run eslint
       run: npm run lint
   test-node:
-    needs: [lint]
     runs-on: ubuntu-latest
     timeout-minutes: 10
     strategy:
@@ -44,7 +43,6 @@ jobs:
     - name: Run test with Node.js ${{ matrix.node-version }}
       run: npm run test
   coverage:
-    needs: [test-node]
     runs-on: ubuntu-latest
     timeout-minutes: 10
     strategy:
