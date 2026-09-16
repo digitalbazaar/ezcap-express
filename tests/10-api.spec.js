@@ -152,7 +152,6 @@ async function _setupApp() {
         return new Ed25519Signature2020();
       }
     }),
-    // eslint-disable-next-line no-unused-vars
     (req, res, next) => {
       const {revocationId} = req.params;
       if(!revocationId.includes(':')) {
