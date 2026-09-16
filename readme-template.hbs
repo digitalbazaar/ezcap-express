@@ -37,8 +37,12 @@ preferably via parties other than the implementer.
 
 ## Install
 
-- Node.js 14+ is supported.
-- [Web Crypto API][] is required by dependencies. Node.js 14 must use a polyfill.
+This software requires and supports maintained recent versions of Node.js and
+browsers. Updates may remove support for older unmaintained platform versions.
+Please use dependency version lock files and testing to ensure compatibility
+with this software.
+
+- [Web Crypto API][] is required. Use a polyfill if needed.
 
 To install from NPM:
 
