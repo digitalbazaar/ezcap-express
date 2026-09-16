@@ -1,7 +1,5 @@
 # ezcap express library (@digitalbazaar/ezcap-express)
 
-[![Build Status](https://img.shields.io/github/actions/workflow/status/digitalbazaar/ezcap-express/main.yaml)](https://github.com/digitalbazaar/ezcap-express/actions/workflows/main.yaml)
-
 > zcap's gettin' you down? Get on the Ezcap Express! Woot WOoot! 🚇🎉
 
 Connect middleware that provides easy Authorization Capability (zcap) support
