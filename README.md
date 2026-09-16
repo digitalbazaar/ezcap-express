@@ -223,7 +223,7 @@ These are the two assumptions that ezcap makes and with those two assumptions,
 <dt><a href="#authorizeZcapRevocation">authorizeZcapRevocation(options)</a> ⇒ <code>function</code></dt>
 <dd><p>Authorizes a request to submit a zcap revocation.</p>
 <p>This middleware is opinionated; it MUST be attached to an endpoint that
-terminates in <code>/zcaps/revocations/:revocationId</code>. This to enable the
+terminates in <code>/zcaps/revocations/:revocationId</code>. This is to enable the
 middleware to automatically generate expected values for running zcap checks
 and to support a common, conventional revocation API pattern.</p>
 <p>The pattern is in support of controlled objects on a service, aka
@@ -323,7 +323,7 @@ Authorizes an incoming request.
 Authorizes a request to submit a zcap revocation.
 
 This middleware is opinionated; it MUST be attached to an endpoint that
-terminates in `/zcaps/revocations/:revocationId`. This to enable the
+terminates in `/zcaps/revocations/:revocationId`. This is to enable the
 middleware to automatically generate expected values for running zcap checks
 and to support a common, conventional revocation API pattern.
 
