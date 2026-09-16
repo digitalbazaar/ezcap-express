@@ -1,5 +1,13 @@
 # @digitalbazaar/ezcap-express Changelog
 
+## 7.3.0 - 2026-09-xx
+
+### Changed
+- **NOTE**: Update supported platforms.
+  - Test on Node.js >=22.
+  - Update `engines.node` to `>=22`.
+  - Update README requirements section.
+
 ## 7.2.0 - 2025-09-24
 
 ### Changed

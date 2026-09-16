@@ -54,7 +54,7 @@
     "mocha": "^11.7.2"
   },
   "engines": {
-    "node": ">=20"
+    "node": ">=22"
   },
   "c8": {
     "reporter": [
