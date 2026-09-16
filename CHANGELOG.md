@@ -3,6 +3,12 @@
 ## 7.3.0 - 2026-09-xx
 
 ### Changed
+- Update dependencies.
+  - `@digitalbazaar/http-digest-header@2.3.0`
+  - `@digitalbazaar/http-signature-zcap-verify@11.2.1`
+  - `@digitalbazaar/zcap@9.0.2`
+  - `jsonld-signatures@11.6.0`
+- Update dev and test dependencies.
 - **NOTE**: Update supported platforms.
   - Test on Node.js >=22.
   - Update `engines.node` to `>=22`.
