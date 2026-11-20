@@ -1,6 +1,6 @@
 # @digitalbazaar/ezcap-express Changelog
 
-## 7.3.1 - 2026-11-dd
+## 7.3.1 - 2026-11-20
 
 ### Changed
 - Update dependencies:
