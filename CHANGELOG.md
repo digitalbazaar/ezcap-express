@@ -1,6 +1,6 @@
 # @digitalbazaar/ezcap-express Changelog
 
-## 7.3.2 - 2026-11-dd
+## 7.3.2 - 2026-11-20
 
 ### Changed
   - `@digitalbazaar/http-signature-zcap-verify@11.2.2`.
